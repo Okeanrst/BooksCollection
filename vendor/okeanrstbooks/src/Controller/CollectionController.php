@@ -4,8 +4,14 @@ namespace OkeanrstBooks\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
-use OkeanrstBooks\Form\BookForm;
 use Doctrine\ORM\EntityManager;
+use OkeanrstBooks\Entity\Book;
+use OkeanrstBooks\Entity\Author;
+use OkeanrstBooks\Entity\Rubric;
+use OkeanrstBooks\Entity\File;
+use OkeanrstBooks\Form\BookForm;
+use OkeanrstBooks\Form\AuthorForm;
+use OkeanrstBooks\Form\RubricForm;
 
 class CollectionController extends AbstractActionController
 {
@@ -56,7 +62,46 @@ class CollectionController extends AbstractActionController
     //в action проверяем права, добавляем название, автора (фамилия, имя, отдельным action выскакивает подсказка) выбираем рубрику из списка
     public function newBookAction()
     {
-        var_dump('newBookAction');
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {
+            $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
+            return $this->redirect()->toRoute('books/collection');            
+        }
+        $form = new BookForm($this->em);
+        $entity = new Book();       
+        $form->bind($entity);
+        $submit = $form->get('submit');
+        $submit->setValue('Add book');       
+        if ($this->getRequest()->isPost()) {
+            $post = $this->getRequest()->getPost();
+            $form->setData($post);          
+            if ($form->isValid()) {                        
+                $result = $this->collection->addBook($entity);
+                if ($result) {
+                    $this->flashMessenger()->addSuccessMessage('Book has been successfully added');                    
+                    //return $this->redirect()->toRoute('books/collection');
+                    return $this->redirect()->toRoute('books/newabook');
+                } else {
+                    $this->flashMessenger()->addErrorMessage('Error adding book');
+                    return $this->redirect()->toRoute('books/newbook');
+                }               
+            } else {
+                $this->flashMessenger()->addErrorMessage('Error adding book. Data failed');                
+                //return $this->redirect()->toRoute('books/newbook');                
+                $view =  new ViewModel();
+                $view->form = $form;        
+                return $view;
+            }
+            
+        }
+        $view =  new ViewModel();
+        $view->form = $form;        
+        
+        return $view;
+    }
+
+    public function ajaxNewBookAction()
+    {
+
     }
     
     //в action проверяем права, редактируем название, автора (фамилия, имя, отдельным action выскакивает подсказка) выбираем рубрику из списка,
@@ -73,32 +118,129 @@ class CollectionController extends AbstractActionController
     
     public function newAuthorAction()
     {
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {
+            $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
+            return $this->redirect()->toRoute('books/collection');            
+        }
+        $form = new AuthorForm($this->em);
+        $entity = new Author();       
+        $form->bind($entity);
+        $submit = $form->get('submit');
+        $submit->setValue('Add author');        
+        if ($this->getRequest()->isPost()) {
+            $post = $this->getRequest()->getPost();
+            $form->setData($post);          
+            if ($form->isValid()) {                        
+                $result = $this->collection->addAuthor($entity);
+                if ($result) {
+                    $this->flashMessenger()->addSuccessMessage('Athor has been successfully added');                    
+                    //return $this->redirect()->toRoute('books/collection');
+                    return $this->redirect()->toRoute('books/newauthor');
+                } else {
+                    $this->flashMessenger()->addErrorMessage('Error adding author');
+                    return $this->redirect()->toRoute('books/newauthor');
+                }               
+            } else {
+                $this->flashMessenger()->addErrorMessage('Error adding author. Data failed');
+                //return $this->redirect()->toRoute('books/newauthor');                
+                $view =  new ViewModel();
+                $view->form = $form;        
+                return $view;
+            }
+            
+        }
+        $view =  new ViewModel();
+        $view->form = $form;        
         
+        return $view;
+    }
+
+    public function ajaxNewAuthorAction()
+    {
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {
+            $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
+            return $this->redirect()->toRoute('books/collection');            
+        }
     }
     
     public function editAuthorAction()
     {
-        
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {
+            $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
+            return $this->redirect()->toRoute('books/collection');            
+        }
     }
     
     public function deleteAuthorAction()
     {
-        
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {
+            $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
+            return $this->redirect()->toRoute('books/collection');            
+        }
     }
     
     public function newRubricAction()
     {
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {
+            $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
+            return $this->redirect()->toRoute('books/collection');            
+        }
+        $form = new RubricForm($this->em);
+        $entity = new Rubric();       
+        $form->bind($entity);
+        $submit = $form->get('submit');
+        $submit->setValue('Add rubric');        
+        if ($this->getRequest()->isPost()) {
+            $post = $this->getRequest()->getPost();
+            $form->setData($post);          
+            if ($form->isValid()) {                        
+                $result = $this->collection->addRubric($entity);
+                if ($result) {
+                    $this->flashMessenger()->addSuccessMessage('Rubric has been successfully added');                    
+                    //return $this->redirect()->toRoute('books/collection');
+                    return $this->redirect()->toRoute('books/newrubric');
+                } else {
+                    $this->flashMessenger()->addErrorMessage('Error adding author');
+                    return $this->redirect()->toRoute('books/newrubric');
+                }               
+            } else {
+                $this->flashMessenger()->addErrorMessage('Error adding rubric. Data failed');
+                //return $this->redirect()->toRoute('books/newrubric');                
+                $view =  new ViewModel();
+                $view->form = $form;        
+                return $view;
+            }
+            
+        }
+        $view =  new ViewModel();
+        $view->form = $form;        
         
+        return $view;
+    }
+
+    public function ajaxNewRubricAction()
+    {
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {
+            $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
+            return $this->redirect()->toRoute('books/collection');            
+        }
+
     }
     
     public function editRubricAction()
     {
-        
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {
+            $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
+            return $this->redirect()->toRoute('books/collection');            
+        }
     }
     
     public function deleteRubricAction()
     {
-        
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {
+            $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
+            return $this->redirect()->toRoute('books/collection');            
+        }
     }
 /*
     public function indexAction()

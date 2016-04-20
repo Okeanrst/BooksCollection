@@ -3,6 +3,8 @@
 namespace OkeanrstBooks\Form;
 
 use Zend\Form\Form;
+use Zend\InputFilter\InputFilterInterface;
+use Zend\InputFilter\InputFilter;
 use Doctrine\Common\Persistence\ObjectManager;
 use DoctrineModule\Stdlib\Hydrator\DoctrineObject as DoctrineHydrator;
 use Zend\Stdlib\Hydrator\ClassMethods;
@@ -12,6 +14,8 @@ use OkeanrstBooks\Entity\Author;
 class AuthorForm extends Form
 {
     private $name = 'author-form';
+
+    private $inputFilter;
     
     public function __construct(ObjectManager $objectManager)
 	{
@@ -22,10 +26,7 @@ class AuthorForm extends Form
         
         $this->add(array(
             'name' => 'id',
-            'type'  => 'hidden',
-            'attributes' => array(
-                'required' => 'required',
-            ),
+            'type'  => 'hidden',            
         ));
         
         $this->add(array(
@@ -76,7 +77,7 @@ class AuthorForm extends Form
 
             $inputFilter->add(array(
                 'name'     => 'id',
-                'required' => true,
+                'required' => false,
                 'filters'  => array(
                     array('name' => 'Int'),
                 ),
@@ -98,6 +99,12 @@ class AuthorForm extends Form
                             'max'      => 64,
                         ),
                     ),
+                    /*array(
+                        'name'    => 'Regex',
+                        'options' => array(
+                            'pattern' => '/[A-Za-zа-яёА-ЯЁ -]+/',                            
+                        ),
+                    ),*/
                 ),
             ));
 
@@ -117,6 +124,12 @@ class AuthorForm extends Form
                             'max'      => 64,
                         ),
                     ),
+                    /*array(
+                        'name'    => 'Regex',
+                        'options' => array(
+                            'pattern' => '/[A-Za-zа-яёА-ЯЁ -]+/',                            
+                        ),
+                    ),*/
                 ),
             ));
 

@@ -1,0 +1,17 @@
+<?php $this->form->prepare();
+echo $this->form()->openTag($this->form); ?>
+
+<dl class="zend_form">
+	<dd><?php echo $this->formHidden($this->form->get('id')) ?></dd>
+    <?php echo $this->formElementErrors($this->form->get('id')); ?>
+	<dt><label for="lastname"><?php echo $this->translate('Lastname') ?></label></dt>
+    <dd><?php echo $this->formInput($this->form->get('lastName')) ?></dd>
+    <?php echo $this->formElementErrors($this->form->get('lastName')); ?>
+    <dt><label for="name"><?php echo $this->translate('Name') ?></label></dt>
+    <dd><?php echo $this->formInput($this->form->get('name')) ?></dd>
+    <?php echo $this->formElementErrors($this->form->get('name')); ?>
+    <dd><?php echo $this->formHidden($this->form->get('csrf')) ?></dd>
+    <?php echo $this->formElementErrors($this->form->get('csrf')); ?>
+    <dd><?php echo $this->formSubmit($this->form->get('submit')) ?></dd>
+</dl>
+<?php echo $this->form()->closeTag() ?>

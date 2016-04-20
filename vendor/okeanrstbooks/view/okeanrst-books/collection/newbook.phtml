@@ -1,0 +1,37 @@
+<h1><?php echo $this->translate('Add book') ?></h1>
+<div id="flashMessage" class="hidden"></div>
+<?php
+$this->form->setAttribute('action', $this->url('books/newbook'));
+$this->form->setAttribute('method', 'post');
+echo $this->partial('bookform.phtml', array('form' => $this->form,));
+?>
+
+
+<script>
+    $(document).ready(function() {
+        var urlForm = '<?php echo $this->url('books/ajaxnewbook'); ?>';        
+        var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
+        var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
+        var mess = $('#flashMessage');
+        var className = '';
+        if (error !== '') {
+        	mess.html(error);        	
+        	mess.addClass("error");
+        	mess.removeClass("hidden");
+        	setTimeout(function() {
+        		mess.addClass("hidden");
+        		mess.removeClass("error");
+        	}, 9000)
+        } else if (success !== '') {
+        	mess.html(success);        	
+        	mess.addClass("success");
+        	mess.removeClass("hidden");
+        	setTimeout(function() {
+        		mess.addClass("hidden");
+        		mess.removeClass("success");
+        	}, 3000);
+        }
+        
+
+    });
+</script>

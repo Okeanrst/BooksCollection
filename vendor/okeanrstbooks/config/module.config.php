@@ -20,13 +20,9 @@ return array(
     'router' => array(
         'routes' => array(
             'books' => array(
-                'type'    => 'segment',
+                'type'    => 'literal',
                 'options' => array(
-                    'route'    => '/books[/][:action]',
-                    'constraints' => array(
-                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                        'id'     => '[0-9]+',
-                    ),
+                    'route'    => '/books',                    
                     'defaults' => array(
                         'controller' => 'Collection',
                         'action'     => 'collection',
@@ -35,7 +31,7 @@ return array(
                 'may_terminate' => true,
                 'child_routes'  => array(
                     'collection' => array(
-                        'type' => 'Literal',
+                        'type' => 'segment',
                         'options' => array(
                             'route' => '/collection[/][:page]',
                             'constraints' => array(
@@ -54,7 +50,7 @@ return array(
                             'route' => '/newbook',                            
                             'defaults' => array(
                                 'controller' => 'Collection',
-                                'action'     => 'new-book',                                
+                                'action'     => 'newbook',                                
                             ),
                         ),
                     ),
@@ -64,7 +60,7 @@ return array(
                             'route' => '/newauthor',                            
                             'defaults' => array(
                                 'controller' => 'Collection',
-                                'action'     => 'new-author',                                
+                                'action'     => 'newauthor',                                
                             ),
                         ),
                     ),
@@ -74,7 +70,37 @@ return array(
                             'route' => '/newrubric',                            
                             'defaults' => array(
                                 'controller' => 'Collection',
-                                'action'     => 'new-rubric',                                
+                                'action'     => 'newrubric',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxnewbook' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/ajaxnewbook',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxnewbook',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxnewauthor' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/ajaxnewauthor',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxnewauthor',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxnewrubric' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/ajaxnewrubric',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxnewrubric',                                
                             ),
                         ),
                     ),

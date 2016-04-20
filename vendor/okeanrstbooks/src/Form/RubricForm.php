@@ -3,6 +3,8 @@
 namespace OkeanrstBooks\Form;
 
 use Zend\Form\Form;
+use Zend\InputFilter\InputFilterInterface;
+use Zend\InputFilter\InputFilter;
 use Doctrine\Common\Persistence\ObjectManager;
 use DoctrineModule\Stdlib\Hydrator\DoctrineObject as DoctrineHydrator;
 use Zend\Stdlib\Hydrator\ClassMethods;
@@ -12,10 +14,15 @@ use DoctrineModule\Validator\NoObjectExists as NoObjectExistsValidator;
 class RubricForm extends Form
 {
     private $name = 'rubric-form';
+
+    private $inputFilter;
+
+    private $objectManager;
     
     public function __construct(ObjectManager $objectManager)
 	{
         parent::__construct($this->name);
+        $this->objectManager = $objectManager;
         //$this->setHydrator(new DoctrineHydrator($objectManager));
         $this->setHydrator(new ClassMethods());
         $this->setObject(new Rubric());
@@ -90,6 +97,12 @@ class RubricForm extends Form
                             'max'      => 64,
                         ),
                     ),
+                    array(
+                        'name'    => 'Alpha',
+                        'options' => array(
+                            'allowWhiteSpace' => true,                            
+                        ),
+                    ),
                 ),
             ));
             $this->inputFilter = $inputFilter;
@@ -98,7 +111,7 @@ class RubricForm extends Form
         $titleInput = $this->inputFilter->get('title');
 
        	$noObjectExistsValidator = new NoObjectExistsValidator(array(
-            'object_repository' => $objectManager->getRepository('OkeanrstBooks\Entity\Rubric'),
+            'object_repository' => $this->objectManager->getRepository('OkeanrstBooks\Entity\Rubric'),
             'fields'            => 'title'
        	));
 
