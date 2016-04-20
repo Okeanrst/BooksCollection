@@ -1,0 +1,3 @@
+<h1><?php echo $this->translate('A collection of books in the rubric ').$this->collection[0]->getRubric()->getTitle() ?></h1>
+
+<?php echo $this->partial('bookcollection.phtml', array('collection' => $this->collection,)) ?>

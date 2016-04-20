@@ -10,13 +10,13 @@
     
     
     <dt><label for="author"><?php echo $this->translate('Author') ?></label></dt>
-    <dd><a href="<?php echo $this->url('books/getbookbyauthor', array('id' => $this->entity->getAuthor()->getId())) ?>" >
+    <dd><a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $this->entity->getAuthor()->getId())) ?>" >
     	<?php echo $this->entity->getAuthor()->getLastName().' '.$this->entity->getAuthor()->getName() ?></a></dd>
     
     
     <dt><label for="rubric"><?php echo $this->translate('Rubric') ?></label></dt>
     <dd><ul><?php foreach ($this->entity->getRubric() as $rubric) ?>
-		<li><a href="<?php echo $this->url('books/getbookbyrubric', array('id' => $rubric->getId())) ?>" ><?php echo $rubric->getTitle() ?></a></li>
+		<li><a href="<?php echo $this->url('books/getbooksbyrubric', array('id' => $rubric->getId())) ?>" ><?php echo $rubric->getTitle() ?></a></li>
     <?php endforeach ?></ul></dd>
     
     

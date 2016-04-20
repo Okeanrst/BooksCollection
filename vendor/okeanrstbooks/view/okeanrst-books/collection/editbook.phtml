@@ -1,15 +1,15 @@
-<h1><?php echo $this->translate('Add rubric') ?></h1>
+<h1><?php echo $this->translate('Edit book ').$this->form->getTitle() ?></h1>
 <div id="flashMessage" class="hidden"></div>
 <?php
-$this->form->setAttribute('action', $this->url('books/newrubric'));
+$this->form->setAttribute('action', $this->url('books/editbook'));
 $this->form->setAttribute('method', 'post');
-echo $this->partial('rubricform.phtml', array('form' => $this->form,));
+echo $this->partial('bookform.phtml', array('form' => $this->form,));
 ?>
 
 
 <script>
     $(document).ready(function() {
-        var urlForm = '<?php echo $this->url('books/ajaxnewrubric'); ?>';        
+        var urlForm = '<?php echo $this->url('books/ajaxeditbook, array('id' => $form->getId())'); ?>';        
         var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
         var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
         var mess = $('#flashMessage');

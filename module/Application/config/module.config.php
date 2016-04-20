@@ -8,7 +8,7 @@
  */
 
 return array(
-    'router' => array(
+    /*'router' => array(
         'routes' => array(
             'home' => array(
                 'type' => 'Zend\Mvc\Router\Http\Literal',
@@ -51,7 +51,7 @@ return array(
                 ),
             ),
         ),
-    ),
+    ),*/
     'service_manager' => array(
         'abstract_factories' => array(
             'Zend\Cache\Service\StorageCacheAbstractServiceFactory',

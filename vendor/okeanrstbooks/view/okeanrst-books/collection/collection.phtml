@@ -1,9 +1,7 @@
 <h1><?php echo $this->translate('Books collection') ?></h1>
 
-<?php if ($this->zfcUserIdentity()): ?>
-    <a href="<?php echo $this->url('books/newbook') ?>" ><?php echo $this->translate('Add new book') ?></a>
-    <a href="<?php echo $this->url('books/newauthor') ?>" ><?php echo $this->translate('Add new author') ?></a>
-    <a href="<?php echo $this->url('books/newrubric') ?>" ><?php echo $this->translate('Add new rubric') ?></a>
-<?php endif; ?>
-
 <?php echo $this->partial('bookcollection.phtml', array('collection' => $this->collection,)) ?>
+
+<?php if ($this->collection) {
+    echo $this->paginationControl($this->collection, 'sliding', 'partial/paginator', array());
+} ?>

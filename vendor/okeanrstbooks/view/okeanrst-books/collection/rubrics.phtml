@@ -1,0 +1,25 @@
+<h1><?php echo $this->translate('Rubrics') ?></h1>
+
+<table class="table">
+    <tr>
+        <th><?php echo $this->translate('№') ?></th>
+        <th><?php echo $this->translate('Title') ?></th>
+        <th><?php echo $this->translate('Action') ?></th>                      
+    </tr>
+    <?php $i = 1;
+    if (count($this->collection) > 0): ?>
+        <?php foreach ($this->collection as $rubric): ?>
+            <tr data-id="<?php $rubric->getId()?>">
+                <td><?php echo $i++;?></td>
+                <td><a href="<?php echo $this->url('books/getbooksbyrubric', array('id' => $rubric->getId())) ?>" >
+                    <?php echo $rubric->getTitle() ?></a>
+                </td>
+                <td><a href="<?php echo $this->url('books/deleterubric', array('id' => $rubric->getId())) ?>" >X</a></td>
+            </tr>
+        <?php endforeach ?>
+    <?php endif ?>
+</table>
+
+<?php if ($this->collection) {
+    echo $this->paginationControl($this->collection, 'sliding', 'partial/paginator', array());
+} ?>

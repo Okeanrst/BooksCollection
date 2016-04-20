@@ -16,151 +16,6 @@ return array(
             CollectionMapper::class => Factory\Service\CollectionMapperFactory::class,
         ],
     ],
-     // The following section is new and should be added to your file
-    'router' => array(
-        'routes' => array(
-            'books' => array(
-                'type'    => 'literal',
-                'options' => array(
-                    'route'    => '/books',                    
-                    'defaults' => array(
-                        'controller' => 'Collection',
-                        'action'     => 'collection',
-                    ),
-                ),
-                'may_terminate' => true,
-                'child_routes'  => array(
-                    'collection' => array(
-                        'type' => 'segment',
-                        'options' => array(
-                            'route' => '/collection[/][:page]',
-                            'constraints' => array(
-                                'page'     => '[0-9]+',
-                            ),
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'collection',
-                                'page' => 1,
-                            ),
-                        ),
-                    ),
-                    'book' => array(
-                        'type' => 'segment',
-                        'options' => array(
-                            'route' => '/book/:id',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'book',                                
-                            ),
-                        ),
-                    ),
-                    'editbook' => array(
-                        'type' => 'segment',
-                        'options' => array(
-                            'route' => '/editbook/:id',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'editbook',                                
-                            ),
-                        ),
-                    ),
-                    'deletebook' => array(
-                        'type' => 'segment',
-                        'options' => array(
-                            'route' => '/deletebook/:id',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'deletebook',                                
-                            ),
-                        ),
-                    ),
-                    'getbookbyauthor' => array(
-                        'type' => 'segment',
-                        'options' => array(
-                            'route' => '/bookbyauthor/:id',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'getbookbyauthor',                                
-                            ),
-                        ),
-                    ),
-                    'getbookbyrubric' => array(
-                        'type' => 'segment',
-                        'options' => array(
-                            'route' => '/bookbyrubric/:id',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'getbookbyrubric',                                
-                            ),
-                        ),
-                    ),
-                    'newbook' => array(
-                        'type' => 'Literal',
-                        'options' => array(
-                            'route' => '/newbook',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'newbook',                                
-                            ),
-                        ),
-                    ),
-                    'newauthor' => array(
-                        'type' => 'Literal',
-                        'options' => array(
-                            'route' => '/newauthor',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'newauthor',                                
-                            ),
-                        ),
-                    ),
-                    'newrubric' => array(
-                        'type' => 'Literal',
-                        'options' => array(
-                            'route' => '/newrubric',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'newrubric',                                
-                            ),
-                        ),
-                    ),
-                    'ajaxnewbook' => array(
-                        'type' => 'Literal',
-                        'options' => array(
-                            'route' => '/ajaxnewbook',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'ajaxnewbook',                                
-                            ),
-                        ),
-                    ),
-                    'ajaxnewauthor' => array(
-                        'type' => 'Literal',
-                        'options' => array(
-                            'route' => '/ajaxnewauthor',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'ajaxnewauthor',                                
-                            ),
-                        ),
-                    ),
-                    'ajaxnewrubric' => array(
-                        'type' => 'Literal',
-                        'options' => array(
-                            'route' => '/ajaxnewrubric',                            
-                            'defaults' => array(
-                                'controller' => 'Collection',
-                                'action'     => 'ajaxnewrubric',                                
-                            ),
-                        ),
-                    ),
-                    
-                    
-                ),
-            ),
-            
-        ),
-    ),
     'view_manager' => array(
         'template_map' => array(
             'layout/books'           => __DIR__ . '/../view/layout/books.phtml',            
@@ -184,5 +39,326 @@ return array(
                 )
             )
         ),        
-    )
+    ),
+     
+    'router' => array(
+        'routes' => array(
+            'books' => array(
+                'type'    => 'literal',
+                'options' => array(
+                    'route'    => '/books',                    
+                    'defaults' => array(
+                        'controller' => 'Collection',
+                        'action'     => 'collection',
+                    ),
+                ),
+                'may_terminate' => true,
+                'child_routes'  => array(
+                    'collection' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/collection[/][:page][/:itemCount]',
+                            'constraints' => array(
+                                'page'     => '[0-9]+',
+                                'itemCount' => '[0-9]+',
+                            ),
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'collection',
+                                'page' => 1,
+                            ),
+                        ),
+                    ),
+                    'book' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/book/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'book',                                
+                            ),
+                        ),
+                    ),
+                    'editbook' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/editbook/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'editbook',                                
+                            ),
+                        ),
+                    ),
+                    'deletebook' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/deletebook/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'deletebook',                                
+                            ),
+                        ),
+                    ),
+                    'getbooksbyauthor' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/booksbyauthor/:id[/:page][/:itemCount]',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',
+                                'page'     => '[0-9]+',
+                                'itemCount' => '[0-9]+',
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'getbooksbyauthor',                                
+                            ),
+                        ),
+                    ),
+                    'getbooksbyrubric' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/booksbyrubric/:id[/:page][/:itemCount]',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',
+                                'page'     => '[0-9]+',
+                                'itemCount' => '[0-9]+',
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'getbooksbyrubric',                                
+                            ),
+                        ),
+                    ),
+                    'newbook' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/newbook',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'newbook',                                
+                            ),
+                        ),
+                    ),
+                    'newauthor' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/newauthor',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'newauthor',                                
+                            ),
+                        ),
+                    ),
+                    'authors' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/authors[/:page][/:itemCount]',
+                            'constraints' => array(                                
+                                'page'     => '[0-9]+',
+                                'itemCount' => '[0-9]+',
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'authors',                                
+                            ),
+                        ),
+                    ),
+                    'editauthor' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/editauthor/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'editauthor',                                
+                            ),
+                        ),
+                    ),
+                    'deleteauthor' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/deleteauthor/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'deleteauthor',                                
+                            ),
+                        ),
+                    ),
+                    'newrubric' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/newrubric',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'newrubric',                                
+                            ),
+                        ),
+                    ),
+                    'rubrics' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/rubrics[/:page][/:itemCount]',
+                            'constraints' => array(                                
+                                'page'     => '[0-9]+',
+                                'itemCount' => '[0-9]+',
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'rubrics',                                
+                            ),
+                        ),
+                    ),
+                    'editrubric' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/editrubric/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'editrubric',                                
+                            ),
+                        ),
+                    ),
+                    'deleterubric' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/deleterubric/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'deleterubric',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxnewbook' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/ajaxnewbook',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxnewbook',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxeditbook' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/ajaxeditbook/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxeditbook',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxdeletebook' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/ajaxdeletebook/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxdeletebook',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxnewauthor' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/ajaxnewauthor',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxnewauthor',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxeditauthor' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/ajaxeditauthor/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxeditauthor',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxdeleteauthor' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/ajaxdeleteauthor/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxdeleteauthor',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxnewrubric' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/ajaxnewrubric',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxnewrubric',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxeditrubric' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/ajaxeditrubric/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxeditrubric',                                
+                            ),
+                        ),
+                    ),
+                    'ajaxdeleterubric' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/ajaxdeleterubric/:id',
+                            'constraints' => array(
+                                'id'     => '[0-9]+',                                
+                            ),                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'ajaxdeleterubric',                                
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            
+        ),
+    ),    
  );

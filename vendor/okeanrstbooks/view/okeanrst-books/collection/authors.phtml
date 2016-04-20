@@ -1,0 +1,27 @@
+<h1><?php echo $this->translate('Authors') ?></h1>
+
+<table class="table">
+    <tr>
+        <th><?php echo $this->translate('№') ?></th>
+        <th><?php echo $this->translate('LastName') ?></th>
+        <th><?php echo $this->translate('Name') ?></th>
+        <th><?php echo $this->translate('Action') ?></th>              
+    </tr>
+    <?php $i = 1;
+    if (count($this->collection) > 0): ?>
+        <?php foreach ($this->collection as $author): ?>
+            <tr data-id="<?php $author->getId()?>">
+                <td><?php echo $i++;?></td>
+                <td><a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $author->getId())) ?>" >
+                    <?php echo $author->getLastName() ?></a>
+                </td>
+                <td><?php echo $author->getName() ?></td>
+                <td><a href="<?php echo $this->url('books/deleteauthor', array('id' => $author->getId())) ?>" >X</a></td>
+            </tr>
+        <?php endforeach ?>
+    <?php endif ?>
+</table>
+
+<?php if ($this->collection) {
+    echo $this->paginationControl($this->collection, 'sliding', 'partial/paginator', array());
+} ?>

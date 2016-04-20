@@ -22,20 +22,30 @@ class CollectionMapper
     {
         return $this->em->getRepository('OkeanrstBooks\Entity\Book')->findAll();
     }
+
+    public function getAllAuthors()
+    {
+        return $this->em->getRepository('OkeanrstBooks\Entity\Author')->findAll();
+    }
     
+    public function getAllRubrics()
+    {
+        return $this->em->getRepository('OkeanrstBooks\Entity\Rubric')->findAll();
+    }
+
     public function getBooksByRubric($id)
     {
-        return $this->em= $em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('rubric' => $id));
+        return $this->em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('rubric' => $id));
     }
     
     public function getBooksByAuthor($id)
     {
-        return $this->em= $em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('author' => $id));
+        return $this->em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('author' => $id));
     }
     
     public function getBooksByAuthorAndRubric($author_id, $rubric_id)
     {
-        return $this->em= $em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('author' => $author_id, 'rubric' => $rubric_id));
+        return $this->em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('author' => $author_id, 'rubric' => $rubric_id));
     }
     
     public function add($entity)

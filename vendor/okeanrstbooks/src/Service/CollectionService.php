@@ -23,11 +23,7 @@ class CollectionService
     {
         $result = $this->getAllBooks();
         if ($result) {
-            $adapter = new ArrayAdapter($result);
-            $paginator = new Paginator($adapter);
-            $paginator->setCurrentPageNumber($page);
-            $paginator->setItemCountPerPage($itemCount);
-            return $paginator;
+            return $this->getPaginator($result, $page, $itemCount);
         }
         return false;
     }
@@ -41,15 +37,29 @@ class CollectionService
     {
         $result = $this->getBooksByRubric($id);
         if ($result) {
-            $adapter = new ArrayAdapter($result);
-            $paginator = new Paginator($adapter);
-            $paginator->setCurrentPageNumber($page);
-            $paginator->setItemCountPerPage($itemCount);
-            return $paginator;
+            return $this->getPaginator($result, $page, $itemCount);
         }
         return false;
     }
     
+    public function getAllAuthorsPaginator($page, $itemCount)
+    {
+        $result = $this->mapper->getAllAuthors();
+        if ($result) {
+            return $this->getPaginator($result, $page, $itemCount);
+        }
+        return false;
+    }
+
+    public function getAllRubricsPaginator($page, $itemCount)
+    {
+        $result = $this->mapper->getAllRubrics();
+        if ($result) {
+            return $this->getPaginator($result, $page, $itemCount);
+        }
+        return false;
+    }
+
     public function getBooksByAuthor($id)
     {
         return $this->mapper->getBooksByAuthor((int) $id);
@@ -59,11 +69,7 @@ class CollectionService
     {
         $result = $this->getBooksByAuthor($id);
         if ($result) {
-            $adapter = new ArrayAdapter($result);
-            $paginator = new Paginator($adapter);
-            $paginator->setCurrentPageNumber($page);
-            $paginator->setItemCountPerPage($itemCount);
-            return $paginator;
+            return $this->getPaginator($result, $page, $itemCount);
         }
         return false;
     }
@@ -76,17 +82,14 @@ class CollectionService
     public function getBooksByAuthorAndRubricPaginator($author_id, $rubric_id, $page, $itemCount)
     {
         $result = $this->getBooksByAuthorAndRubric($author_id, $rubric_id);
-        if ($result) {
-            $adapter = new ArrayAdapter($result);
-            $paginator = new Paginator($adapter);
-            $paginator->setCurrentPageNumber($page);
-            $paginator->setItemCountPerPage($itemCount);
-            return $paginator;
+        if ($result) {            
+            return $this->getPaginator($result, $page, $itemCount);
         }
         return false;
     }
     
-    public function addBook(\OkeanrstBooks\Entity\Book $entity) {
+    public function addBook(\OkeanrstBooks\Entity\Book $entity)
+    {
         $author = $entity->getAuthor();
         /*if (!is_a($author, 'OkeanrstBooks\Entity\Author')) {
             $author = $this->mapper->findAuthorById($author);
@@ -95,7 +98,8 @@ class CollectionService
         return $this->mapper->add($entity);
     }
     
-    public function addAuthor(\OkeanrstBooks\Entity\Author $entity) {
+    public function addAuthor(\OkeanrstBooks\Entity\Author $entity)
+    {
         return $this->mapper->add($entity);
     }
     
@@ -103,8 +107,18 @@ class CollectionService
         return $this->mapper->add($entity);
     }
     
-    public function __call($name, $arguments) {        
+    public function __call($name, $arguments)
+    {        
         return call_user_func_array(array($this->mapper, $name), $arguments);        
+    }
+
+    private function getPaginator($result, $page, $itemCount)
+    {
+        $adapter = new ArrayAdapter($result);
+        $paginator = new Paginator($adapter);
+        $paginator->setCurrentPageNumber($page);
+        $paginator->setItemCountPerPage($itemCount);
+        return $paginator;
     }
 
 }
