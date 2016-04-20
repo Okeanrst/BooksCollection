@@ -32,7 +32,7 @@ class CollectionController extends AbstractActionController
         $books = $this->collection->getAllBooksPaginator((int)$this->params()->fromQuery('page', 1), 10);        
         if ($books) {
             //$bookForm = new BookForm($this->em);            
-            return new ViewModel(array('books' => $books));
+            return new ViewModel(array('collection' => $books));
         } else {
             //$this->flashMessenger()->addErrorMessage('');
             //$this->layout()->setTemplate('layout/layout');
@@ -43,6 +43,43 @@ class CollectionController extends AbstractActionController
     
     //информация по конкретной книге с возможностью просмотра, при наличии приввилегий ссылки на редактирование-форма с заполненными полями 
     public function bookAction()
+    {
+        $id = (int) $this->params()->fromRoute('id');
+        if (!$id) {
+            return $this->redirect()->toRoute('books/collection');
+        }         
+        $result = $this->collection->findBookById($id);
+        if ($result) {
+            $view =  new ViewModel();
+            $view->entity = $result;        
+            return $view;
+        }
+        return $this->redirect()->toRoute('books/collection'); 
+    }
+
+    public function ajaxNewBookAction()
+    {
+
+    }
+    
+    //в action проверяем права, редактируем название, автора (фамилия, имя, отдельным action выскакивает подсказка) выбираем рубрику из списка,
+    public function editBookAction()
+    {
+        
+    }
+    
+    //в action проверяем права, доп. окно подтверждения
+    public function deleteBookAction()
+    {
+        
+    }
+
+    public function getBookByAuthorAction()
+    {
+        
+    }
+
+    public function getBookByRubricAction()
     {
         
     }
@@ -97,24 +134,7 @@ class CollectionController extends AbstractActionController
         $view->form = $form;        
         
         return $view;
-    }
-
-    public function ajaxNewBookAction()
-    {
-
-    }
-    
-    //в action проверяем права, редактируем название, автора (фамилия, имя, отдельным action выскакивает подсказка) выбираем рубрику из списка,
-    public function editBookAction()
-    {
-        
-    }
-    
-    //в action проверяем права, доп. окно подтверждения
-    public function deleteBookAction()
-    {
-        
-    }
+    }    
     
     public function newAuthorAction()
     {

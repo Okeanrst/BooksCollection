@@ -22,10 +22,10 @@ class BookForm extends Form
     public function __construct(ObjectManager $objectManager)
 	{
         parent::__construct($this->name);
-        $this->objectManager = $objectManager;
-        //$this->setHydrator(new DoctrineHydrator($objectManager));
+        $this->objectManager = $objectManager;        
         $this->setHydrator(new ClassMethods());
-        $this->setObject(new Book());
+        $this->setHydrator(new DoctrineHydrator($objectManager))->setObject(new Book());
+        
         
         $this->add(array(
             'name' => 'id',

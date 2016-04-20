@@ -1,0 +1,30 @@
+<h1><?php echo $this->translate('Book ').$this->entity->getTitle() ?></h1>
+<dl class="zend_form">
+	<dd class="hidden" data-id="<?php echo $this->formHidden($this->entity->getId()) ?>"></dd>    
+	
+    <dt><label for="title"><?php echo $this->translate('Title') ?></label></dt>
+    <dd><?php echo $this->entity->getTitle()) ?></dd>
+        
+    <dt><label for="photofile"><?php echo $this->translate('Photo') ?></label></dt>
+    <dd><img src="<?php echo $this->entity->getPhotofile()->getPath() ?>" alt="Books photo"></dd>
+    
+    
+    <dt><label for="author"><?php echo $this->translate('Author') ?></label></dt>
+    <dd><a href="<?php echo $this->url('books/getbookbyauthor', array('id' => $this->entity->getAuthor()->getId())) ?>" >
+    	<?php echo $this->entity->getAuthor()->getLastName().' '.$this->entity->getAuthor()->getName() ?></a></dd>
+    
+    
+    <dt><label for="rubric"><?php echo $this->translate('Rubric') ?></label></dt>
+    <dd><ul><?php foreach ($this->entity->getRubric() as $rubric) ?>
+		<li><a href="<?php echo $this->url('books/getbookbyrubric', array('id' => $rubric->getId())) ?>" ><?php echo $rubric->getTitle() ?></a></li>
+    <?php endforeach ?></ul></dd>
+    
+    
+    <dt><label for="bookfile"><?php echo $this->translate('File') ?></label></dt>
+    <dd><a href="<?php echo $this->entity->getBookfile()->getPath() ?>">View book</a></dd>    
+    
+</dl>
+<?php if ($this->zfcUserIdentity()): ?>
+	<td><a href="<?php echo $this->url('books/deletebook', array('id' => $this->entity->getId())); ?>"><?php echo $this->translate('Delete book') ?></a></td>
+	<td><a href="<?php echo $this->url('books/editbook', array('id' => $this->entity->getId())); ?>"><?php echo $this->translate('Edit book') ?></a></td>
+<?php endif; ?>

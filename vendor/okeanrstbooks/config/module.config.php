@@ -44,6 +44,56 @@ return array(
                             ),
                         ),
                     ),
+                    'book' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/book/:id',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'book',                                
+                            ),
+                        ),
+                    ),
+                    'editbook' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/editbook/:id',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'editbook',                                
+                            ),
+                        ),
+                    ),
+                    'deletebook' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/deletebook/:id',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'deletebook',                                
+                            ),
+                        ),
+                    ),
+                    'getbookbyauthor' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/bookbyauthor/:id',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'getbookbyauthor',                                
+                            ),
+                        ),
+                    ),
+                    'getbookbyrubric' => array(
+                        'type' => 'segment',
+                        'options' => array(
+                            'route' => '/bookbyrubric/:id',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'getbookbyrubric',                                
+                            ),
+                        ),
+                    ),
                     'newbook' => array(
                         'type' => 'Literal',
                         'options' => array(

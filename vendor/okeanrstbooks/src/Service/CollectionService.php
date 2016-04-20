@@ -87,6 +87,11 @@ class CollectionService
     }
     
     public function addBook(\OkeanrstBooks\Entity\Book $entity) {
+        $author = $entity->getAuthor();
+        /*if (!is_a($author, 'OkeanrstBooks\Entity\Author')) {
+            $author = $this->mapper->findAuthorById($author);
+            $entity->setAuthor($author);
+        }*/
         return $this->mapper->add($entity);
     }
     
