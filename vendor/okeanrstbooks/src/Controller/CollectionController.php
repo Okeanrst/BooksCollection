@@ -4,8 +4,7 @@ namespace OkeanrstBooks\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
-//use Album\Entity\Album;
-//use Album\Form\AlbumForm;
+use OkeanrstBooks\Form\BookForm;
 use Doctrine\ORM\EntityManager;
 
 class CollectionController extends AbstractActionController
@@ -24,16 +23,14 @@ class CollectionController extends AbstractActionController
     //показываем постранично список всех книг, ссылки на просмотр только автора, рубрики. В шаблоне проверяем привиллегии-выводим ссылку для добавления книги.
     public function collectionAction()
     {
-        //$books = $this->$collection->findAllBooksPaginator((int)$this->params()->fromQuery('page', 1), 10);		
-        $books = false;
+        $books = $this->collection->getAllBooksPaginator((int)$this->params()->fromQuery('page', 1), 10);        
         if ($books) {
-            $booksForm = new BooksForm($this->em);
-            $this->layout()->setTemplate('layout/layout');
-            return new ViewModel(array('books' => $books, 'booksForm' => $booksForm));
+            //$bookForm = new BookForm($this->em);            
+            return new ViewModel(array('books' => $books));
         } else {
-            /*$this->flashMessenger()->addErrorMessage('');
-            $this->layout()->setTemplate('layout/layout');
-            return $this->redirect()->toRoute('books');*/
+            //$this->flashMessenger()->addErrorMessage('');
+            //$this->layout()->setTemplate('layout/layout');
+            //return $this->redirect()->toRoute('books');
             return new ViewModel();
         }        
     }
@@ -57,9 +54,9 @@ class CollectionController extends AbstractActionController
     }
     
     //в action проверяем права, добавляем название, автора (фамилия, имя, отдельным action выскакивает подсказка) выбираем рубрику из списка
-    public function addBookAction()
+    public function newBookAction()
     {
-        
+        var_dump('newBookAction');
     }
     
     //в action проверяем права, редактируем название, автора (фамилия, имя, отдельным action выскакивает подсказка) выбираем рубрику из списка,
@@ -70,6 +67,36 @@ class CollectionController extends AbstractActionController
     
     //в action проверяем права, доп. окно подтверждения
     public function deleteBookAction()
+    {
+        
+    }
+    
+    public function newAuthorAction()
+    {
+        
+    }
+    
+    public function editAuthorAction()
+    {
+        
+    }
+    
+    public function deleteAuthorAction()
+    {
+        
+    }
+    
+    public function newRubricAction()
+    {
+        
+    }
+    
+    public function editRubricAction()
+    {
+        
+    }
+    
+    public function deleteRubricAction()
     {
         
     }

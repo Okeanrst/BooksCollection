@@ -13,7 +13,7 @@ class CollectionMapper
         $this->em = $em;        
     }
     
-    public function findBookById(int $id)
+    public function findBookById($id)
     {
         return $this->em->find('OkeanrstBooks\Entity\Book', $id);
     }
@@ -23,7 +23,32 @@ class CollectionMapper
         return $this->em->getRepository('OkeanrstBooks\Entity\Book')->findAll();
     }
     
-    public function deleteBook(int $id)
+    public function getBooksByRubric($id)
+    {
+        return $this->em= $em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('rubric' => $id));
+    }
+    
+    public function getBooksByAuthor($id)
+    {
+        return $this->em= $em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('author' => $id));
+    }
+    
+    public function getBooksByAuthorAndRubric($author_id, $rubric_id)
+    {
+        return $this->em= $em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('author' => $author_id, 'rubric' => $rubric_id));
+    }
+    
+    public function add($entity)
+	{
+	    return $this->persist($entity);
+	}
+    
+    public function save($entity)
+	{
+	    return $this->persist($entity);
+	}
+    
+    public function deleteBook($id)
     {
 	    $entity = $this->getEntityManagerService()->find('OkeanrstBooks\Entity\Book', $id);
 		if ($entity) {
@@ -33,17 +58,17 @@ class CollectionMapper
 		return false;
 	}
     
-    public function findAuthorById(int $id)
+    public function findAuthorById($id)
     {
         return $this->em->find('OkeanrstBooks\Entity\Author', $id);
     }
     
-    public function findRubricById(int $id)
+    public function findRubricById($id)
     {
         return $this->em->find('OkeanrstBooks\Entity\Rubric', $id);        
     }
     
-    public function findBooksByRubricId(int $id)
+    public function findBooksByRubricId($id)
     {
         $er = $this->em->getRepository($this->options->getUserEntityClass());
         return $er->findOneBy(array('username' => $username));

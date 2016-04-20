@@ -72,7 +72,7 @@ class Book
      *
      * @ORM\OneToOne(targetEntity="OkeanrstBooks\Entity\File")
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="file_id", referencedColumnName="id", unique=true, nullable=true, onDelete="CASCADE")
+     *   @ORM\JoinColumn(name="file_id", referencedColumnName="id", unique=true, nullable=false, onDelete="CASCADE")
      * })
      */
     private $bookfile;
@@ -128,6 +128,9 @@ class Book
      */
     public function setPhotofile(\OkeanrstBooks\Entity\File $photofile = null)
     {
+        if ($photofile !== null) {
+            $photofile->setIsfoto(true);
+        }
         $this->photofile = $photofile;
 
         return $this;
@@ -223,89 +226,6 @@ class Book
     public function getBookfile()
     {
         return $this->bookfile;
-    }
- 
-    /**
-     * Convert the object to an array.
-     *
-     * @return array
-     */
-    public function getArrayCopy() 
-    {
-        return get_object_vars($this);
-    }
- 
-    /**
-     * Populate from an array.
-     *
-     * @param array $data
-     */
-    public function exchangeArray ($data = array()) 
-    {
-        $this->id = $data['id'];
-        $this->artist = $data['artist'];
-        $this->title = $data['title'];
-    }
- 
-    public function setInputFilter(InputFilterInterface $inputFilter)
-    {
-        throw new \Exception("Not used");
-    }
- 
-    public function getInputFilter()
-    {
-        if (!$this->inputFilter) {
-            $inputFilter = new InputFilter();
-
-            $inputFilter->add(array(
-                'name'     => 'id',
-                'required' => true,
-                'filters'  => array(
-                    array('name' => 'Int'),
-                ),
-            ));
-
-            $inputFilter->add(array(
-                'name'     => 'title',
-                'required' => true,
-                'filters'  => array(
-                    array('name' => 'StripTags'),
-                    array('name' => 'StringTrim'),
-                ),
-                'validators' => array(
-                    array(
-                        'name'    => 'StringLength',
-                        'options' => array(
-                            'encoding' => 'UTF-8',
-                            'min'      => 1,
-                            'max'      => 100,
-                        ),
-                    ),
-                ),
-            ));
-
-            $inputFilter->add(array(
-                'name'     => 'author',
-                'required' => true,
-                'filters'  => array(
-                    array('name' => 'StripTags'),
-                    array('name' => 'StringTrim'),
-                ),
-                'validators' => array(
-                    array(
-                        'name'    => 'StringLength',
-                        'options' => array(
-                            'encoding' => 'UTF-8',
-                            'min'      => 1,
-                            'max'      => 100,
-                        ),
-                    ),
-                ),
-            ));
-
-            $this->inputFilter = $inputFilter;
-        }
-
-        return $this->inputFilter;
-    }
+    } 
+    
 }

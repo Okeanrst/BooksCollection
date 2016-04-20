@@ -1,5 +1,33 @@
-<?php if ($this->zfcUserIdentity()) {
-    echo 'Hello';
-} else {
-    echo 'Bue';
-}
+<h1><?php echo $this->translate('Books collection') ?></h1>
+
+<?php if ($this->zfcUserIdentity()): ?>
+    <a href="<?php echo $this->url('books/newbook') ?>" ><?php echo $this->translate('Add new book') ?></a>
+    <a href="<?php echo $this->url('books/newauthor') ?>" ><?php echo $this->translate('Add new author') ?></a>
+    <a href="<?php echo $this->url('books/newrubric') ?>" ><?php echo $this->translate('Add new rubric') ?></a>
+<?php endif; ?>
+
+<table class="table">
+    <tr>
+        <th><?php echo $this->translate('№') ?></th>
+        <th><?php echo $this->translate('Title') ?></th>
+        <th><?php echo $this->translate('Author') ?></th>
+        <th><?php echo $this->translate('Rubric') ?></th>
+        <th><?php echo $this->translate('Photo') ?></th>
+        <th><?php echo $this->translate('File') ?></th>        
+    </tr>
+    <?php $i = 1; ?>
+    <?php foreach ($this->books as $book): ?>
+        <tr data-id="<?php $book->getId()?>">
+            <td><?php echo $i++;?></td>
+            <td><?php echo $book->getTitle(); ?></td>
+            <td><?php echo $book->getAuthor(); ?></td>
+            <td><?php foreach ($book->getRubric() as $rubric) {
+                echo ', '.$rubric->getTitle();
+            } ?></td>
+            <td><img src="/data/books/<?php echo $book->getPhotofile()->getName() ?>" alt="Photo books"></td>
+            <td><a href="/data/books/<?php echo $book->getBookfile()->getName() ?>">Read</a></td>
+        </tr>
+    <?php endforeach ?>
+</table>
+
+<?php //echo $this->paginationControl($this->books, 'sliding', 'partial/paginator', array()); ?>

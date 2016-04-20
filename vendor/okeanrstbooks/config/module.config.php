@@ -22,7 +22,7 @@ return array(
             'books' => array(
                 'type'    => 'segment',
                 'options' => array(
-                    'route'    => '/books[/][:action][/:id]',
+                    'route'    => '/books[/][:action]',
                     'constraints' => array(
                         'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
                         'id'     => '[0-9]+',
@@ -32,17 +32,57 @@ return array(
                         'action'     => 'collection',
                     ),
                 ),
-            ),
-            'test' => array(
-                'type' => 'Literal',
-                'options' => array(
-                    'route' => '/test',
-                    'defaults' => array(
-                        'controller' => 'Collection',
-                        'action'     => 'collection',
+                'may_terminate' => true,
+                'child_routes'  => array(
+                    'collection' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/collection[/][:page]',
+                            'constraints' => array(
+                                'page'     => '[0-9]+',
+                            ),
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'collection',
+                                'page' => 1,
+                            ),
+                        ),
                     ),
+                    'newbook' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/newbook',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'new-book',                                
+                            ),
+                        ),
+                    ),
+                    'newauthor' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/newauthor',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'new-author',                                
+                            ),
+                        ),
+                    ),
+                    'newrubric' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/newrubric',                            
+                            'defaults' => array(
+                                'controller' => 'Collection',
+                                'action'     => 'new-rubric',                                
+                            ),
+                        ),
+                    ),
+                    
+                    
                 ),
             ),
+            
         ),
     ),
     'view_manager' => array(

@@ -16,10 +16,10 @@ class CollectionService
     
     public function getAllBooks()
     {
-        $this->mapper->getAllBooks();
+        return $this->mapper->getAllBooks();
     }
     
-    public function findAllAccountsPaginator($page, $itemCount)
+    public function getAllBooksPaginator($page, $itemCount)
     {
         $result = $this->getAllBooks();
         if ($result) {
@@ -31,4 +31,75 @@ class CollectionService
         }
         return false;
     }
+    
+    public function getBooksByRubric($id)
+    {
+        return $this->mapper->getBooksByRubric((int) $id);
+    }
+    
+    public function getBooksByRubricPaginator($id, $page, $itemCount)
+    {
+        $result = $this->getBooksByRubric($id);
+        if ($result) {
+            $adapter = new ArrayAdapter($result);
+            $paginator = new Paginator($adapter);
+            $paginator->setCurrentPageNumber($page);
+            $paginator->setItemCountPerPage($itemCount);
+            return $paginator;
+        }
+        return false;
+    }
+    
+    public function getBooksByAuthor($id)
+    {
+        return $this->mapper->getBooksByAuthor((int) $id);
+    }
+    
+    public function getBooksByAuthorPaginator($id, $page, $itemCount)
+    {
+        $result = $this->getBooksByAuthor($id);
+        if ($result) {
+            $adapter = new ArrayAdapter($result);
+            $paginator = new Paginator($adapter);
+            $paginator->setCurrentPageNumber($page);
+            $paginator->setItemCountPerPage($itemCount);
+            return $paginator;
+        }
+        return false;
+    }
+    
+    public function getBooksByAuthorAndRubric($author_id, $rubric_id)
+    {
+        return $this->mapper->getBooksByAuthorAndRubric((int) $author_id, (int) $rubric_id);
+    }
+    
+    public function getBooksByAuthorAndRubricPaginator($author_id, $rubric_id, $page, $itemCount)
+    {
+        $result = $this->getBooksByAuthorAndRubric($author_id, $rubric_id);
+        if ($result) {
+            $adapter = new ArrayAdapter($result);
+            $paginator = new Paginator($adapter);
+            $paginator->setCurrentPageNumber($page);
+            $paginator->setItemCountPerPage($itemCount);
+            return $paginator;
+        }
+        return false;
+    }
+    
+    public function addBook(\OkeanrstBooks\Entity\Book $entity) {
+        return $this->mapper->add($entity);
+    }
+    
+    public function addAuthor(\OkeanrstBooks\Entity\Author $entity) {
+        return $this->mapper->add($entity);
+    }
+    
+    public function addRubric(\OkeanrstBooks\Entity\Rubric $entity) {
+        return $this->mapper->add($entity);
+    }
+    
+    public function __call($name, $arguments) {        
+        return call_user_func_array(array($this->mapper, $name), $arguments);        
+    }
+
 }
