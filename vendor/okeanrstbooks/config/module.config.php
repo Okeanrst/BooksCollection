@@ -15,6 +15,9 @@ return array(
             CollectionService::class => Factory\Service\CollectionServiceFactory::class,
             CollectionMapper::class => Factory\Service\CollectionMapperFactory::class,
         ],
+        'invokables' => [
+            'doctrine_extensions.uploadable'    => 'Gedmo\Uploadable\UploadableListener'
+        ],    
     ],
     'view_manager' => array(
         'template_map' => array(
@@ -175,7 +178,7 @@ return array(
                     'editauthor' => array(
                         'type' => 'segment',
                         'options' => array(
-                            'route' => '/editauthor/:id',
+                            'route' => '/editauthor[/:id]',
                             'constraints' => array(
                                 'id'     => '[0-9]+',                                
                             ),                            

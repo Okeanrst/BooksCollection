@@ -106,7 +106,7 @@ class CollectionService
     public function addRubric(\OkeanrstBooks\Entity\Rubric $entity) {
         return $this->mapper->add($entity);
     }
-    
+        
     public function __call($name, $arguments)
     {        
         return call_user_func_array(array($this->mapper, $name), $arguments);        

@@ -1,5 +1,5 @@
 <?php 
-$title = $this->translate('Edit author ').$this->form->getLastName().' '.$this->form->getName();
+$title = $this->translate('Edit author ').$this->form->get('lastName')->getValue().' '.$this->form->get('name')->getValue();
 $this->headTitle($title);
 ?>
 <h1><?php echo $this->escapeHtml($title) ?></h1>
@@ -10,32 +10,14 @@ $this->form->setAttribute('method', 'post');
 echo $this->partial('authorform.phtml', array('form' => $this->form,));
 ?>
 
-
 <script>
-    $(document).ready(function() {
-        var urlForm = '<?php echo $this->url('books/ajaxeditauthor', array('id' => $this->form->getId())); ?>';        
-        var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
-        var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
-        var mess = $('#flashMessage');
-        var className = '';
-        if (error !== '') {
-        	mess.html(error);        	
-        	mess.addClass("error");
-        	mess.removeClass("hidden");
-        	setTimeout(function() {
-        		mess.addClass("hidden");
-        		mess.removeClass("error");
-        	}, 9000)
-        } else if (success !== '') {
-        	mess.html(success);        	
-        	mess.addClass("success");
-        	mess.removeClass("hidden");
-        	setTimeout(function() {
-        		mess.addClass("hidden");
-        		mess.removeClass("success");
-        	}, 3000);
-        }
-        
+    var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
+    var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
+    var mess = $('#flashMessage');
 
+    
+
+    $(document).ready(function() {               
+        flashMessage(mess, error, success);        
     });
 </script>

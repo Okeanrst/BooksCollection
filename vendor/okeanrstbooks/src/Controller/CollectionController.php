@@ -130,7 +130,22 @@ class CollectionController extends AbstractActionController
     {
         $this->checkAccess();
         $form = new BookForm($this->em);
-        $book = new Book();       
+        $book = new Book();
+        if ($this->getRequest()->isPost()) {
+            $uploadManager = $this->getServiceLocator()->get('doctrine_extensions.uploadable');        
+        $files = $this->getRequest()->getFiles()->toArray();        
+        $photofile = new File();
+        $bookfile = new File();
+        $arr = [$photofile, $bookfile];
+        $i = 0;
+        foreach ($files as $file) {
+            $uploadManager->addEntityFileInfo($arr[$i++], $file);
+        }        
+        
+        $book->setPhotofile($photofile);
+        $book->setBookfile($bookfile);
+        }
+               
         $form->bind($book);
         $submit = $form->get('submit');
         $submit->setValue('Add book');       
@@ -183,22 +198,9 @@ class CollectionController extends AbstractActionController
         $request = $this->getRequest();        
         $form->setData($request->getPost());
         if ($form->isValid()) {
-            $result = $this->collection->save($book);
-            if ($result) {
-                $this->flashMessenger()->addSuccessMessage('Book has been successfully updated');
-                return $this->redirect()->toRoute('books/collection');
-            } else {
-                $this->flashMessenger()->addErrorMessage('Error saving book');                
-                $book = $this->collection->getBookById($id);
-                if ($book) {
-                    $form = new BookForm($this->em);
-                    $form->bind($book);
-                    $view =  new ViewModel();
-                    $view->form = $form;        
-                    return $view;
-                }
-                return $this->redirect()->toRoute('books/collection');
-            }
+            $this->collection->save($book);            
+            $this->flashMessenger()->addSuccessMessage('Book has been successfully updated');
+            return $this->redirect()->toRoute('books/collection');            
         } else {
             $this->flashMessenger()->addErrorMessage('Error editing book. Data failed');                
             $view =  new ViewModel();
@@ -248,7 +250,25 @@ class CollectionController extends AbstractActionController
 
     public function ajaxDeleteBookAction()
     {
-
+        $response = $this->getResponse();
+        if(!$this->ajaxCheckAccess()) {
+            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+        }                
+        $request = $this->getRequest();
+        if ($request->isXmlHttpRequest()) {            
+            $id = (int) $request->getPost('id');            
+            if (!$id) {
+                return $response->setContent(Json::encode(array('error' => 'Id not found in request')));
+            }
+            $book = $this->collection->getBookById($id);
+            if ($book) {                   
+                $this->collection->delete($book);                                        
+                return $response->setContent(Json::encode(array('success' => 'Book has been deleted')));
+            } else {
+                return $response->setContent(Json::encode(array('error' => 'Book not found')));
+            }            
+        }        
+        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
     }
     
     public function newAuthorAction()
@@ -289,52 +309,63 @@ class CollectionController extends AbstractActionController
 
     public function ajaxNewAuthorAction()
     {
-        $this->checkAccess();
+        
     }
     
     public function editAuthorAction()
     {
         $this->checkAccess();
         $id = (int) $this->params()->fromRoute('id');
-        if (!$id) {
-            return $this->redirect()->toRoute('books/authors');
-        }
-        $author = $this->collection->getAuthorById($id);
-        if (!$author || !$request->isPost()) {
-            return $this->redirect()->toRoute('books/authors');
-        }
         $form = new AuthorForm($this->em);
-        $form->bind($author);      
-        $request = $this->getRequest();        
-        $form->setData($request->getPost());
-        if ($form->isValid()) {
-            $result = $this->collection->save($author);
-            if ($result) {
-                $this->flashMessenger()->addSuccessMessage('Author has been successfully updated');
-                return $this->redirect()->toRoute('books/authors');
-            } else {
-                $this->flashMessenger()->addErrorMessage('Error saving author');                
-                $author = $this->collection->getAuthorById($id);
-                if ($author) {
-                    $form = new AuthorForm($this->em);
-                    $form->bind($author);
-                    $view =  new ViewModel();
-                    $view->form = $form;        
-                    return $view;
-                }
+        if ($id) {
+            $author = $this->collection->getAuthorById($id);
+            if (!$author) {
                 return $this->redirect()->toRoute('books/authors');
             }
-        } else {
-            $this->flashMessenger()->addErrorMessage('Error editing author. Data failed');                
+            $form->bind($author);
             $view =  new ViewModel();
             $view->form = $form;        
             return $view;
+        }       
+        
+        if ($this->getRequest()->isPost()) {
+            $post = $this->getRequest()->getPost();
+            $id = (int) $post->get('id');            
+            $author = $this->collection->getAuthorById($id);
+            $form->bind($author);
+            $form->setData($post);          
+            if ($form->isValid()) {
+                $this->collection->save($author);
+                $this->flashMessenger()->addSuccessMessage('Athor has been successfully editing');                   
+                return $this->redirect()->toRoute('books/authors');                
+            } else {
+                $this->flashMessenger()->addErrorMessage('Error editing author. Data is not valid');                
+            }
         }
+        return $this->redirect()->toRoute('books/authors');
     }
 
     public function ajaxEditAuthorAction()
     {
-
+        $response = $this->getResponse();
+        if(!$this->ajaxCheckAccess()) {
+            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+        }                
+        $request = $this->getRequest();
+        if ($request->isXmlHttpRequest()) {            
+            $id = (int) $request->getPost('id');            
+            if (!$id) {
+                return $response->setContent(Json::encode(array('error' => 'Id not found in request')));
+            }
+            $author = $this->collection->getAuthorById($id);
+            if ($author) {                   
+                $this->collection->delete($author);                                        
+                return $response->setContent(Json::encode(array('success' => 'Author has been deleted')));
+            } else {
+                return $response->setContent(Json::encode(array('error' => 'Author not found')));
+            }            
+        }        
+        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
     }
     
     public function deleteAuthorAction()
@@ -442,39 +473,36 @@ class CollectionController extends AbstractActionController
         $this->checkAccess();
         $id = (int) $this->params()->fromRoute('id');
         if (!$id) {
-            return $this->redirect()->toRoute('books/rubrics');
+            return $this->redirect()->toRoute('books/authors');
         }
-        $rubric = $this->collection->getRubricById($id);
-        if (!$rubric || !$request->isPost()) {
-            return $this->redirect()->toRoute('books/rubrics');
+        $author = $this->collection->getAuthorById($id);
+        if (!$author) {
+            return $this->redirect()->toRoute('books/authors');
         }
-        $form = new RubricForm($this->em);
-        $form->bind($rubric);      
-        $request = $this->getRequest();        
-        $form->setData($request->getPost());
-        if ($form->isValid()) {
-            $result = $this->collection->save($rubric);
-            if ($result) {
-                $this->flashMessenger()->addSuccessMessage('Rubric has been successfully updated');
-                return $this->redirect()->toRoute('books/rubrics');
-            } else {
-                $this->flashMessenger()->addErrorMessage('Error saving rubric');                
-                $rubric = $this->collection->getRubricById($id);
-                if ($rubric) {
-                    $form = new RubricForm($this->em);
-                    $form->bind($rubric);
-                    $view =  new ViewModel();
-                    $view->form = $form;        
-                    return $view;
+        $form = new AuthorForm($this->em);
+        $form->bind($author);
+        if ($this->getRequest()->isPost()) {
+            $post = $this->getRequest()->getPost();
+            $form->setData($post);          
+            if ($form->isValid()) {
+                $id = (int) $form->get('id')->getValue();
+                $result = $this->collection->getAuthorById($id);
+                if ($result) {
+                    $this->collection->save($author);
+                    $this->flashMessenger()->addSuccessMessage('Athor has been successfully editing');                   
+                    return $this->redirect()->toRoute('books/authors');
+                } else {
+                    $this->flashMessenger()->addErrorMessage('Error editing author');
+                    return $this->redirect()->toRoute('books/authors');
                 }
-                return $this->redirect()->toRoute('books/rubrics');
+            } else {
+                $this->flashMessenger()->addErrorMessage('Error editing author. Data is not valid');                
             }
-        } else {
-            $this->flashMessenger()->addErrorMessage('Error editing rubric. Data failed');                
-            $view =  new ViewModel();
-            $view->form = $form;        
-            return $view;
         }
+        $view =  new ViewModel();
+        $view->form = $form;        
+        return $view;
+
     }
 
     public function ajaxEditRubricAction()

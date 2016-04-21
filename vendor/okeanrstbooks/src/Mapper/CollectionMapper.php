@@ -55,7 +55,7 @@ class CollectionMapper
     
     public function save($entity)
 	{
-	    return $this->persist($entity);
+	    $this->persist($entity);
 	}
     
     public function delete($entity)

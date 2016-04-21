@@ -20,8 +20,8 @@ class AuthorForm extends Form
     public function __construct(ObjectManager $objectManager)
 	{
         parent::__construct($this->name);
-        //$this->setHydrator(new DoctrineHydrator($objectManager));
-        $this->setHydrator(new ClassMethods());
+        $this->setHydrator(new DoctrineHydrator($objectManager));
+        //$this->setHydrator(new ClassMethods());
         $this->setObject(new Author());
         
         $this->add(array(

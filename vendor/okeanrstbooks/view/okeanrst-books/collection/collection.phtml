@@ -13,7 +13,7 @@ $this->headTitle($title);
 <div id="ajaxcontainer" class="hidden">   
     <?php
     $title = 'Are you sure that you want to delete author';
-    $formName = 'deleteauthor';
+    $formName = 'deletebook';
     echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => $formName ])
     ?>    
 </div>
@@ -21,7 +21,7 @@ $this->headTitle($title);
 <script>
     var curUrl = '<?php echo $this->url() ?>';
     var reload = true; //reload page after action
-    var url = '<?php echo $this->url('books/ajaxdeleteauthor') ?>';
+    var url = '<?php echo $this->url('books/ajaxdeletebook') ?>';
     var formName = '<?php echo $formName ?>';
     var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
     var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
