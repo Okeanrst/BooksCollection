@@ -259,12 +259,9 @@ return array(
                         ),
                     ),
                     'ajaxeditbook' => array(
-                        'type' => 'segment',
+                        'type' => 'literal',
                         'options' => array(
-                            'route' => '/ajaxeditbook/:id',
-                            'constraints' => array(
-                                'id'     => '[0-9]+',                                
-                            ),                            
+                            'route' => '/ajaxeditbook',                                                        
                             'defaults' => array(
                                 'controller' => 'Collection',
                                 'action'     => 'ajaxeditbook',                                
@@ -272,12 +269,9 @@ return array(
                         ),
                     ),
                     'ajaxdeletebook' => array(
-                        'type' => 'segment',
+                        'type' => 'literal',
                         'options' => array(
-                            'route' => '/ajaxdeletebook/:id',
-                            'constraints' => array(
-                                'id'     => '[0-9]+',                                
-                            ),                            
+                            'route' => '/ajaxdeletebook',                                                        
                             'defaults' => array(
                                 'controller' => 'Collection',
                                 'action'     => 'ajaxdeletebook',                                
@@ -295,12 +289,9 @@ return array(
                         ),
                     ),
                     'ajaxeditauthor' => array(
-                        'type' => 'segment',
+                        'type' => 'literal',
                         'options' => array(
-                            'route' => '/ajaxeditauthor/:id',
-                            'constraints' => array(
-                                'id'     => '[0-9]+',                                
-                            ),                            
+                            'route' => '/ajaxeditauthor',                                                        
                             'defaults' => array(
                                 'controller' => 'Collection',
                                 'action'     => 'ajaxeditauthor',                                
@@ -308,12 +299,9 @@ return array(
                         ),
                     ),
                     'ajaxdeleteauthor' => array(
-                        'type' => 'segment',
+                        'type' => 'literal',
                         'options' => array(
-                            'route' => '/ajaxdeleteauthor/:id',
-                            'constraints' => array(
-                                'id'     => '[0-9]+',                                
-                            ),                            
+                            'route' => '/ajaxdeleteauthor',                                                        
                             'defaults' => array(
                                 'controller' => 'Collection',
                                 'action'     => 'ajaxdeleteauthor',                                
@@ -331,12 +319,9 @@ return array(
                         ),
                     ),
                     'ajaxeditrubric' => array(
-                        'type' => 'segment',
+                        'type' => 'literal',
                         'options' => array(
-                            'route' => '/ajaxeditrubric/:id',
-                            'constraints' => array(
-                                'id'     => '[0-9]+',                                
-                            ),                            
+                            'route' => '/ajaxeditrubric',                                                        
                             'defaults' => array(
                                 'controller' => 'Collection',
                                 'action'     => 'ajaxeditrubric',                                
@@ -344,12 +329,9 @@ return array(
                         ),
                     ),
                     'ajaxdeleterubric' => array(
-                        'type' => 'segment',
+                        'type' => 'literal',
                         'options' => array(
-                            'route' => '/ajaxdeleterubric/:id',
-                            'constraints' => array(
-                                'id'     => '[0-9]+',                                
-                            ),                            
+                            'route' => '/ajaxdeleterubric',                                                        
                             'defaults' => array(
                                 'controller' => 'Collection',
                                 'action'     => 'ajaxdeleterubric',                                

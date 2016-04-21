@@ -4,6 +4,7 @@ namespace OkeanrstBooks\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
+use Zend\Json\Json;
 use Doctrine\ORM\EntityManager;
 use OkeanrstBooks\Entity\Book;
 use OkeanrstBooks\Entity\Author;
@@ -48,7 +49,7 @@ class CollectionController extends AbstractActionController
         if (!$id) {
             return $this->redirect()->toRoute('books/collection');
         }         
-        $result = $this->collection->findBookById($id);
+        $result = $this->collection->getBookById($id);
         if ($result) {
             $view =  new ViewModel();
             $view->entity = $result;        
@@ -103,8 +104,8 @@ class CollectionController extends AbstractActionController
         $itemCount = $itemCount ? $itemCount : 10;
         $result = $this->collection->getAllAuthorsPaginator($page, $itemCount);
         if ($result) {
-            $view =  new ViewModel();
-            $view->collection = $result;        
+            $view =  new ViewModel();            
+            $view->collection = $result;            
             return $view;
         }
         return $this->redirect()->toRoute('books/collection');
@@ -129,15 +130,15 @@ class CollectionController extends AbstractActionController
     {
         $this->checkAccess();
         $form = new BookForm($this->em);
-        $entity = new Book();       
-        $form->bind($entity);
+        $book = new Book();       
+        $form->bind($book);
         $submit = $form->get('submit');
         $submit->setValue('Add book');       
         if ($this->getRequest()->isPost()) {
             $post = $this->getRequest()->getPost();
             $form->setData($post);          
             if ($form->isValid()) {                        
-                $result = $this->collection->addBook($entity);
+                $result = $this->collection->addBook($book);
                 if ($result) {
                     $this->flashMessenger()->addSuccessMessage('Book has been successfully added');                    
                     //return $this->redirect()->toRoute('books/collection');
@@ -173,7 +174,7 @@ class CollectionController extends AbstractActionController
         if (!$id) {
             return $this->redirect()->toRoute('books/collection');
         }
-        $book = $this->collection->findBookById($id);
+        $book = $this->collection->getBookById($id);
         if (!$book || !$request->isPost()) {
             return $this->redirect()->toRoute('books/collection');
         }
@@ -188,7 +189,7 @@ class CollectionController extends AbstractActionController
                 return $this->redirect()->toRoute('books/collection');
             } else {
                 $this->flashMessenger()->addErrorMessage('Error saving book');                
-                $book = $this->collection->findBookById($id);
+                $book = $this->collection->getBookById($id);
                 if ($book) {
                     $form = new BookForm($this->em);
                     $form->bind($book);
@@ -213,11 +214,36 @@ class CollectionController extends AbstractActionController
 
     public function deleteBookAction()
     {
-        $this->checkAccess();
+        $this->checkAccess();        
+        $request = $this->getRequest();
+        if ($request->isPost()) {
+            $del = $request->getPost('del', 'No');
+
+            if ($del == 'Yes') {
+                $id = (int) $request->getPost('id');
+                $book = $this->collection->getBookById($id);
+                if ($book) {                   
+                    $this->collection->delete($book);                    
+                    $this->flashMessenger()->addSuccessMessage('Book has been deleted');
+                    return $this->redirect()->toRoute('books/collection');                    
+                } else {
+                    $this->flashMessenger()->addErrorMessage('Error. Book not found!');
+                    return $this->redirect()->toRoute('books/collection');
+                }
+            }            
+            return $this->redirect()->toRoute('books/collection');
+        }        
         $id = (int) $this->params()->fromRoute('id');
         if (!$id) {
             return $this->redirect()->toRoute('books/collection');
         }
+        $book = $this->collection->getBookById($id);
+        if (!$book) {
+            return $this->redirect()->toRoute('books/collection');
+        }
+        $view =  new ViewModel();
+        $view->book = $book;       
+        return $view;
     }
 
     public function ajaxDeleteBookAction()
@@ -273,7 +299,7 @@ class CollectionController extends AbstractActionController
         if (!$id) {
             return $this->redirect()->toRoute('books/authors');
         }
-        $author = $this->collection->findAuthorById($id);
+        $author = $this->collection->getAuthorById($id);
         if (!$author || !$request->isPost()) {
             return $this->redirect()->toRoute('books/authors');
         }
@@ -288,7 +314,7 @@ class CollectionController extends AbstractActionController
                 return $this->redirect()->toRoute('books/authors');
             } else {
                 $this->flashMessenger()->addErrorMessage('Error saving author');                
-                $author = $this->collection->findAuthorById($id);
+                $author = $this->collection->getAuthorById($id);
                 if ($author) {
                     $form = new AuthorForm($this->em);
                     $form->bind($author);
@@ -313,12 +339,60 @@ class CollectionController extends AbstractActionController
     
     public function deleteAuthorAction()
     {
-        $this->checkAccess();
+        $this->checkAccess();        
+        $request = $this->getRequest();
+        if ($request->isPost()) {
+            $del = $request->getPost('del', 'No');
+
+            if ($del == 'Yes') {
+                $id = (int) $request->getPost('id');
+                $author = $this->collection->getAuthorById($id);
+                if ($author) {                   
+                    $this->collection->delete($author);                    
+                    $this->flashMessenger()->addSuccessMessage('Author has been deleted');
+                    return $this->redirect()->toRoute('books/authors');                    
+                } else {
+                    $this->flashMessenger()->addErrorMessage('Error. Athor not found!');
+                    return $this->redirect()->toRoute('books/authors');
+                }
+            }
+            
+            return $this->redirect()->toRoute('books/authors');
+        }        
+        $id = (int) $this->params()->fromRoute('id');
+        if (!$id) {
+            return $this->redirect()->toRoute('books/authors');
+        }
+        $author = $this->collection->getAuthorById($id);
+        if (!$author) {
+            return $this->redirect()->toRoute('books/authors');
+        }
+        $view =  new ViewModel();
+        $view->author = $author;       
+        return $view;
     }
 
     public function ajaxDeleteAuthorAction()
     {
-        $this->checkAccess();
+        $response = $this->getResponse();
+        if(!$this->ajaxCheckAccess()) {
+            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+        }                
+        $request = $this->getRequest();
+        if ($request->isXmlHttpRequest()) {            
+            $id = (int) $request->getPost('id');            
+            if (!$id) {
+                return $response->setContent(Json::encode(array('error' => 'Id not found in request')));
+            }
+            $author = $this->collection->getAuthorById($id);
+            if ($author) {                   
+                $this->collection->delete($author);                                        
+                return $response->setContent(Json::encode(array('success' => 'Author has been deleted')));
+            } else {
+                return $response->setContent(Json::encode(array('error' => 'Author not found')));
+            }            
+        }        
+        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));        
     }
     
     public function newRubricAction()
@@ -370,11 +444,11 @@ class CollectionController extends AbstractActionController
         if (!$id) {
             return $this->redirect()->toRoute('books/rubrics');
         }
-        $rubric = $this->collection->findAuthorById($id);
+        $rubric = $this->collection->getRubricById($id);
         if (!$rubric || !$request->isPost()) {
             return $this->redirect()->toRoute('books/rubrics');
         }
-        $form = new AuthorForm($this->em);
+        $form = new RubricForm($this->em);
         $form->bind($rubric);      
         $request = $this->getRequest();        
         $form->setData($request->getPost());
@@ -385,9 +459,9 @@ class CollectionController extends AbstractActionController
                 return $this->redirect()->toRoute('books/rubrics');
             } else {
                 $this->flashMessenger()->addErrorMessage('Error saving rubric');                
-                $rubric = $this->collection->findAuthorById($id);
+                $rubric = $this->collection->getRubricById($id);
                 if ($rubric) {
-                    $form = new AuthorForm($this->em);
+                    $form = new RubricForm($this->em);
                     $form->bind($rubric);
                     $view =  new ViewModel();
                     $view->form = $form;        
@@ -410,12 +484,60 @@ class CollectionController extends AbstractActionController
     
     public function deleteRubricAction()
     {
-        $this->checkAccess();
+        $this->checkAccess();        
+        $request = $this->getRequest();
+        if ($request->isPost()) {
+            $del = $request->getPost('del', 'No');
+
+            if ($del == 'Yes') {
+                $id = (int) $request->getPost('id');
+                $rubric = $this->collection->getRubricById($id);
+                if ($rubric) {                   
+                    $this->collection->delete($rubric);                    
+                    $this->flashMessenger()->addSuccessMessage('Rubric has been deleted');
+                    return $this->redirect()->toRoute('books/rubrics');                    
+                } else {
+                    $this->flashMessenger()->addErrorMessage('Error. Rubric not found!');
+                    return $this->redirect()->toRoute('books/rubrics');    
+                }
+            }
+            
+            return $this->redirect()->toRoute('books/rubrics');
+        }        
+        $id = (int) $this->params()->fromRoute('id');
+        if (!$id) {
+            return $this->redirect()->toRoute('books/rubrics');
+        }
+        $rubric = $this->collection->getRubricById($id);
+        if (!$rubric) {
+            return $this->redirect()->toRoute('books/rubrics');
+        }
+        $view =  new ViewModel();
+        $view->rubric = $rubric;       
+        return $view;
     }
 
     public function ajaxDeleteRubricAction()
     {
-        $this->checkAccess();
+        $response = $this->getResponse();
+        if(!$this->ajaxCheckAccess()) {
+            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+        }                
+        $request = $this->getRequest();
+        if ($request->isXmlHttpRequest()) {            
+            $id = (int) $request->getPost('id');            
+            if (!$id) {
+                return $response->setContent(Json::encode(array('error' => 'Id not found in request')));
+            }
+            $rubric = $this->collection->getRubricById($id);
+            if ($rubric) {                   
+                $this->collection->delete($rubric);                                        
+                return $response->setContent(Json::encode(array('success' => 'Rubric has been deleted')));
+            } else {
+                return $response->setContent(Json::encode(array('error' => 'Rubric not found')));
+            }            
+        }        
+        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
     }
 
     private function checkAccess()
@@ -424,6 +546,14 @@ class CollectionController extends AbstractActionController
             $this->flashMessenger()->addErrorMessage('Error. Access is denied!');
             return $this->redirect()->toRoute('books/collection');            
         }
+    }
+
+    private function ajaxCheckAccess()
+    {
+        if (!$this->zfcUserAuthentication()->hasIdentity()) {            
+            return false;                        
+        }
+        return true;
     }
 /*
     public function indexAction()

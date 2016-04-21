@@ -1,0 +1,86 @@
+body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+}
+
+.zf-green {
+    color: #68b604;
+}
+
+.btn-success {
+  background-color: #57a900;
+  background-image: -moz-linear-gradient(top, #70d900, #57a900);
+  background-image: -ms-linear-gradient(top, #70d900, #57a900);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#70d900), to(#57a900));
+  background-image: -webkit-linear-gradient(top, #70d900, #57a900);
+  background-image: -o-linear-gradient(top, #70d900, #57a900);
+  background-image: linear-gradient(top, #70d900, #57a900);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#70d900', endColorstr='#57a900', GradientType=0);
+}
+
+.btn-success:hover,
+.btn-success:active,
+.btn-success.active,
+.btn-success.disabled,
+.btn-success[disabled] {
+  background-color: #57a900;
+}
+
+.btn-success:active, .btn-success.active {
+  background-color: #57a900;
+}
+
+div.container a.brand {
+    background: url("../img/zf2-logo.png") no-repeat scroll 0 10px transparent;
+    margin-left: 0;
+    padding: 8px 20px 12px 40px;
+}
+
+.hidden  {
+  display: none;
+}
+
+.error {
+  background-color: #F3A8A8;
+  --color: green;
+  position: absolute;
+  display: table-cell;
+  width: 500px;
+  height: 80px
+  text-align: center;
+}
+
+.success {
+  background-color: #B3F3A8;
+  --color: red;
+  position: absolute;
+  display: table-cell;
+  width: 500px;
+  height: 80px
+  text-align: center;
+}
+
+.cover {
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  z-index: 3;
+  opacity: 0.5;
+  width: 100%;
+  height: 100%;
+  background-color: #FFFFFF;  
+}
+
+.ajaxpage {
+  position: fixed;
+  left: 150px;
+  top: 50px;  
+  z-index: 4;  
+  width: 80%;
+  height: 80%;
+  display: table-cell;
+  text-align: center;
+  background-color: #FFFFFF;
+  border: 1px solid #DDD;   
+}
+

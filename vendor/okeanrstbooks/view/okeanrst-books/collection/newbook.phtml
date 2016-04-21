@@ -1,5 +1,10 @@
-<h1><?php echo $this->translate('Add book') ?></h1>
+<?php 
+$title = $this->translate('Add book');
+$this->headTitle($title);
+?>
+<h1><?php echo $this->escapeHtml($title) ?></h1>
 <div id="flashMessage" class="hidden"></div>
+
 <?php
 $this->form->setAttribute('action', $this->url('books/newbook'));
 $this->form->setAttribute('method', 'post');

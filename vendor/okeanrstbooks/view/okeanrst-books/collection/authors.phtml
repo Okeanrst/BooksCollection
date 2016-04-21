@@ -1,4 +1,9 @@
-<h1><?php echo $this->translate('Authors') ?></h1>
+<?php 
+$title = $this->translate('Authors');
+$this->headTitle($title);
+?>
+<h1><?php echo $this->escapeHtml($title) ?></h1>
+<div id="flashMessage" class="hidden"></div>
 
 <table class="table">
     <tr>
@@ -10,13 +15,15 @@
     <?php $i = 1;
     if (count($this->collection) > 0): ?>
         <?php foreach ($this->collection as $author): ?>
-            <tr data-id="<?php $author->getId()?>">
+            <tr data-id="<?php echo $author->getId()?>">
                 <td><?php echo $i++;?></td>
                 <td><a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $author->getId())) ?>" >
                     <?php echo $author->getLastName() ?></a>
                 </td>
                 <td><?php echo $author->getName() ?></td>
-                <td><a href="<?php echo $this->url('books/deleteauthor', array('id' => $author->getId())) ?>" >X</a></td>
+                <td>
+                <?php if ($this->zfcUserIdentity()):?><a class="ajax" href="<?php echo $this->url('books/deleteauthor', array('id' => $author->getId())) ?>" >X</a><?php endif; ?>
+                </td>
             </tr>
         <?php endforeach ?>
     <?php endif ?>
@@ -25,3 +32,30 @@
 <?php if ($this->collection) {
     echo $this->paginationControl($this->collection, 'sliding', 'partial/paginator', array());
 } ?>
+<div id="cover" class="hidden"></div>
+<div id="ajaxcontainer" class="hidden">   
+    <?php
+    $title = 'Are you sure that you want to delete author';
+    $formName = 'deleteauthor';
+    echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => $formName ])
+    ?>    
+</div>
+
+<script>
+    var curUrl = '<?php echo $this->url() ?>';
+    var reload = true; //reload page after action
+    var url = '<?php echo $this->url('books/ajaxdeleteauthor') ?>';
+    var formName = '<?php echo $formName ?>';
+    var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
+    var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
+    var mess = $('#flashMessage');
+
+    
+
+    $(document).ready(function() {               
+        flashMessage(mess, error, success);
+        $('.ajax').click(doAction);
+    });
+
+    
+</script>

@@ -13,7 +13,7 @@ class CollectionMapper
         $this->em = $em;        
     }
     
-    public function findBookById($id)
+    public function getBookById($id)
     {
         return $this->em->find('OkeanrstBooks\Entity\Book', $id);
     }
@@ -58,27 +58,23 @@ class CollectionMapper
 	    return $this->persist($entity);
 	}
     
-    public function deleteBook($id)
+    public function delete($entity)
     {
-	    $entity = $this->getEntityManagerService()->find('OkeanrstBooks\Entity\Book', $id);
-		if ($entity) {
-		    $this->em->remove($entity);
-		    return $this->em->flush();
-		}
-		return false;
+	    $this->em->remove($entity);
+		$this->em->flush();	
 	}
     
-    public function findAuthorById($id)
+    public function getAuthorById($id)
     {
         return $this->em->find('OkeanrstBooks\Entity\Author', $id);
     }
     
-    public function findRubricById($id)
+    public function getRubricById($id)
     {
         return $this->em->find('OkeanrstBooks\Entity\Rubric', $id);        
     }
     
-    public function findBooksByRubricId($id)
+    public function getBooksByRubricId($id)
     {
         $er = $this->em->getRepository($this->options->getUserEntityClass());
         return $er->findOneBy(array('username' => $username));

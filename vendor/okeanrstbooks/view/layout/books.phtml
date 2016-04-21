@@ -46,6 +46,8 @@
                         <?php else: ?>
                             <li><a href="<?php echo $this->url('zfcuser/login') ?>"><?php echo $this->translate('Login') ?></a></li>
                         <?php endif?>
+                        <li><a href="<?php echo $this->url('books/authors') ?>"><?php echo $this->translate('Authors') ?></a></li>
+                        <li><a href="<?php echo $this->url('books/rubrics') ?>"><?php echo $this->translate('Rubrics') ?></a></li>
                     </ul>
                 </div><!--/.nav-collapse -->
             </div>
@@ -57,6 +59,6 @@
                 <p><?php echo date('Y') ?> by Okeanrst</p>
             </footer>
         </div> <!-- /container -->
-        <?php echo $this->inlineScript() ?>
+        <?php echo $this->inlineScript()->prependFile($this->basePath('js/mainscript.js')) ?>
     </body>
 </html>

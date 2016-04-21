@@ -92,7 +92,7 @@ class CollectionService
     {
         $author = $entity->getAuthor();
         /*if (!is_a($author, 'OkeanrstBooks\Entity\Author')) {
-            $author = $this->mapper->findAuthorById($author);
+            $author = $this->mapper->getAuthorById($author);
             $entity->setAuthor($author);
         }*/
         return $this->mapper->add($entity);

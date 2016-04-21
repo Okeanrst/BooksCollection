@@ -1,3 +1,8 @@
-<h1><?php echo $this->translate('Сollection of books author ').$this->collection[0]->getAuthor()->getLastName().' '.$this->collection[0]->getAuthor()->getName() ?></h1>
+<?php 
+$title = $this->translate('Сollection of books author ').$this->collection[0]->getAuthor()->getLastName().' '.$this->collection[0]->getAuthor()->getName();
+$this->headTitle($title);
+?>
+<h1><?php echo $this->escapeHtml($title) ?></h1>
+<div id="flashMessage" class="hidden"></div>
 
 <?php echo $this->partial('bookcollection.phtml', array('collection' => $this->collection,)) ?>
