@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
- * @Gedmo\Uploadable(path="/", callback="myCallbackMethod", filenameGenerator="SHA1", allowOverwrite=true, appendNumber=true)
+ * @Gedmo\Uploadable(path="/", filenameGenerator="SHA1", allowOverwrite=true, appendNumber=true)
  */
 class File
 {
@@ -16,12 +16,6 @@ class File
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
-
-    /**
-     * @ORM\Column
-     * @Gedmo\UploadableFilePath
-     */
-    private $path;
 
     /**
      * @ORM\Column(type="string", length=64, nullable=false, unique=false)
@@ -39,12 +33,7 @@ class File
      * @ORM\Column(type="decimal")
      * @Gedmo\UploadableFileSize
      */
-    private $size;
-    
-    /**
-     * @ORM\Column(type="boolean", nullable=false) 
-     */
-    private $isfoto;
+    private $size;   
 
     /**
      * Get id
@@ -150,35 +139,6 @@ class File
     public function getSize()
     {
         return $this->size;
-    }
-
-    /**
-     * Set isfoto
-     *
-     * @param boolean $isfoto
-     *
-     * @return File
-     */
-    public function setIsfoto($isfoto)
-    {
-        $this->isfoto = $isfoto;
-
-        return $this;
-    }
-
-    /**
-     * Get isfoto
-     *
-     * @return boolean
-     */
-    public function getIsfoto()
-    {
-        return $this->isfoto;
-    }
-    
-    public function myCallbackMethod(array $info)
-    {
-        // Do some stuff with the file..
-    }
+    }  
     
 }

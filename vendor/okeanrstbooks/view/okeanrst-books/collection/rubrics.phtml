@@ -3,6 +3,9 @@ $title = $this->translate('Rubrics');
 $this->headTitle($title);
 ?>
 <h1><?php echo $this->escapeHtml($title) ?></h1>
+<?php if ($this->zfcUserIdentity()):?>
+     <a class="ajaxnew" href="<?php echo $this->url('books/newrubric') ?>" >Add new rubric</a>      
+<?php endif; ?>
 <div id="flashMessage" class="hidden"></div>
 
 <table class="table">
@@ -19,9 +22,14 @@ $this->headTitle($title);
                 <td><a href="<?php echo $this->url('books/getbooksbyrubric', array('id' => $rubric->getId())) ?>" >
                     <?php echo $rubric->getTitle() ?></a>
                 </td>
-                <td>
-                <?php if ($this->zfcUserIdentity()): ?><a class="ajax" href="<?php echo $this->url('books/deleterubric', array('id' => $rubric->getId())) ?>" >X</a><?php endif; ?>
-                </td>
+                <?php if ($this->zfcUserIdentity()):?>
+                    <td>
+                    <a class="ajaxedit" href="<?php echo $this->url('books/editrubric', array('id' => $rubric->getId())) ?>" >edit</a>
+                    </td>
+                    <td>
+                    <a class="ajaxdel" href="<?php echo $this->url('books/deleterubric', array('id' => $rubric->getId())) ?>" >delete</a>
+                    </td>
+                <?php endif; ?>
             </tr>
         <?php endforeach ?>
     <?php endif ?>
@@ -32,26 +40,39 @@ $this->headTitle($title);
 } ?>
 
 <div id="cover" class="hidden"></div>
-<div id="ajaxcontainer" class="hidden">   
-    <?php
-    $title = 'Are you sure that you want to delete rubric';
-    $formName = 'deleterubric';
-    echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => $formName ])
+<div id="ajaxnew" class="hidden">
+    <?php 
+    $this->rubricForm->setAttribute('name', 'newrubric');    
+    echo $this->partial('rubricform.phtml', ['form' => $this->rubricForm]); ?>
+</div>
+<div id="ajaxedit" class="hidden">
+    <?php 
+    $this->rubricForm->setAttribute('name', 'editrubric');    
+    echo $this->partial('rubricform.phtml', ['form' => $this->rubricForm]); ?>
+</div>
+<div id="ajaxdelete" class="hidden">   
+    <?php    
+    $title = 'Are you sure that you want to delete rubric';    
+    echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => 'deleterubric' ]);
     ?>    
 </div>
 
 <script>
-    var curUrl = '<?php echo $this->url() ?>';
+    //var curUrl = '<?php //echo $this->url() ?>';    
     var reload = true; //reload page after action
-    var url = '<?php echo $this->url('books/ajaxdeleterubric') ?>';
-    var formName = '<?php echo $formName ?>';
+    //var url = '<?php //echo $this->url('books/ajaxdeleterubric') ?>';
+    //var formName = '<?php //echo $formName ?>';
     var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
     var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
-    var mess = $('#flashMessage');    
+    var mess = $('#flashMessage');
+
+    
 
     $(document).ready(function() {               
         flashMessage(mess, error, success);
-        $('.ajax').click(doAction);
+        $('.ajaxnew').click(newAction);
+        $('.ajaxedit').click(editAction);
+        $('.ajaxdel').click(deleteAction);
     });
 
     

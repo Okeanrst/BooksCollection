@@ -128,9 +128,6 @@ class Book
      */
     public function setPhotofile(\OkeanrstBooks\Entity\File $photofile = null)
     {
-        if ($photofile !== null) {
-            $photofile->setIsfoto(true);
-        }
         $this->photofile = $photofile;
 
         return $this;

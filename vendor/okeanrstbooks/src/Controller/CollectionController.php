@@ -5,6 +5,7 @@ namespace OkeanrstBooks\Controller;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use Zend\Json\Json;
+use Zend\Form\FormInterface;
 use Doctrine\ORM\EntityManager;
 use OkeanrstBooks\Entity\Book;
 use OkeanrstBooks\Entity\Author;
@@ -31,14 +32,15 @@ class CollectionController extends AbstractActionController
     public function collectionAction()
     {
         $books = $this->collection->getAllBooksPaginator((int)$this->params()->fromQuery('page', 1), 10);        
+        $bookForm = new BookForm($this->em);
         if ($books) {
-            //$bookForm = new BookForm($this->em);            
-            return new ViewModel(array('collection' => $books));
+                        
+            return new ViewModel(array('collection' => $books, 'bookForm' => $bookForm));
         } else {
             //$this->flashMessenger()->addErrorMessage('');
             //$this->layout()->setTemplate('layout/layout');
             //return $this->redirect()->toRoute('books');
-            return new ViewModel();
+            return new ViewModel(['bookForm' => $bookForm]);
         }        
     }
     
@@ -103,12 +105,12 @@ class CollectionController extends AbstractActionController
         $itemCount = $this->params()->fromRoute('itemCount');
         $itemCount = $itemCount ? $itemCount : 10;
         $result = $this->collection->getAllAuthorsPaginator($page, $itemCount);
-        if ($result) {
-            $view =  new ViewModel();            
+        $view =  new ViewModel();
+        if ($result) {                        
             $view->collection = $result;            
-            return $view;
         }
-        return $this->redirect()->toRoute('books/collection');
+        $view->authorForm = new AuthorForm($this->em);
+        return $view;
     }
 
     public function rubricsAction()
@@ -118,12 +120,12 @@ class CollectionController extends AbstractActionController
         $itemCount = $this->params()->fromRoute('itemCount');
         $itemCount = $itemCount ? $itemCount : 10;
         $result = $this->collection->getAllRubricsPaginator($page, $itemCount);
-        if ($result) {
-            $view =  new ViewModel();
-            $view->collection = $result;        
-            return $view;
+        $view =  new ViewModel();
+        if ($result) {            
+            $view->collection = $result;                 
         }
-        return $this->redirect()->toRoute('books/collection');
+        $view->rubricForm = new RubricForm($this->em);
+        return $view;
     }    
     
     public function newBookAction()
@@ -132,18 +134,18 @@ class CollectionController extends AbstractActionController
         $form = new BookForm($this->em);
         $book = new Book();
         if ($this->getRequest()->isPost()) {
-            $uploadManager = $this->getServiceLocator()->get('doctrine_extensions.uploadable');        
-        $files = $this->getRequest()->getFiles()->toArray();        
-        $photofile = new File();
-        $bookfile = new File();
-        $arr = [$photofile, $bookfile];
-        $i = 0;
-        foreach ($files as $file) {
-            $uploadManager->addEntityFileInfo($arr[$i++], $file);
-        }        
-        
-        $book->setPhotofile($photofile);
-        $book->setBookfile($bookfile);
+            $uploadManager = $this->getServiceLocator()->get('doctrine_extensions.uploadable');
+            $uploadManager->setDefaultPath('/');        
+            $files = $this->getRequest()->getFiles()->toArray();        
+            $photofile = new File();
+            $bookfile = new File();
+                        
+            $uploadManager->addEntityFileInfo($bookfile, $files['bookfile']);
+            $uploadManager->addEntityFileInfo($photofile, $files['photofile']);
+                  
+            
+            $book->setPhotofile($photofile);
+            $book->setBookfile($bookfile);
         }
                
         $form->bind($book);
@@ -179,7 +181,33 @@ class CollectionController extends AbstractActionController
 
     public function ajaxNewBookAction()
     {
+        $response = $this->getResponse();
+        if(!$this->ajaxCheckAccess()) {
+            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+        }                
+        $request = $this->getRequest();
+        if ($request->isXmlHttpRequest()) {            
+            $post = $this->getRequest()->getPost();            
+            $form = new BookForm($this->em);
+            $book = new Book();
 
+
+
+
+
+
+
+
+            $form->bind($book);
+            $form->setData($post);          
+            if ($form->isValid()) {
+                $this->collection->save($book);                                       
+                return $response->setContent(Json::encode(array('success' => 'Book has been edded')));
+            } else {             
+                return $response->setContent(Json::encode([]));                    
+            }                     
+        }        
+        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
     }
 
     public function editBookAction()
@@ -309,7 +337,29 @@ class CollectionController extends AbstractActionController
 
     public function ajaxNewAuthorAction()
     {
-        
+        $response = $this->getResponse();
+        if(!$this->ajaxCheckAccess()) {
+            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+        }                
+        $request = $this->getRequest();
+        if ($request->isXmlHttpRequest()) {            
+            $post = $this->getRequest()->getPost();            
+            $form = new AuthorForm($this->em);
+            $author = new Author();            
+            $form->bind($author);
+            $form->setData($post);          
+            if ($form->isValid()) {
+                $this->collection->save($author);                                       
+                return $response->setContent(Json::encode(array('success' => 'Author has been edded')));
+            } else {                    
+                $formData = [
+                    'lastName' => $form->get('lastName')->getValue(),
+                    'name' => $form->get('name')->getValue()
+                ];
+                return $response->setContent(Json::encode($formData));                    
+            }                     
+        }        
+        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
     }
     
     public function editAuthorAction()
@@ -353,16 +403,29 @@ class CollectionController extends AbstractActionController
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
+            $post = $this->getRequest()->getPost();
             $id = (int) $request->getPost('id');            
-            if (!$id) {
-                return $response->setContent(Json::encode(array('error' => 'Id not found in request')));
+            $form = new AuthorForm($this->em);            
+            if (!$id) {                
+                return $response->setContent(Json::encode([]));
             }
             $author = $this->collection->getAuthorById($id);
-            if ($author) {                   
-                $this->collection->delete($author);                                        
-                return $response->setContent(Json::encode(array('success' => 'Author has been deleted')));
+            if ($author) {          
+                $form->bind($author);
+                $form->setData($post);          
+                if ($form->isValid()) {
+                    $this->collection->save($author);                                       
+                    return $response->setContent(Json::encode(array('success' => 'Author has been editing')));
+                } else {                    
+                    $formData = ['id' => $form->get('id')->getValue(),
+                        'lastName' => $form->get('lastName')->getValue(),
+                        'name' => $form->get('name')->getValue()
+                    ];
+                    return $response->setContent(Json::encode($formData));                    
+                }          
+                
             } else {
-                return $response->setContent(Json::encode(array('error' => 'Author not found')));
+                return $response->setContent(Json::encode([]));
             }            
         }        
         return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
@@ -464,7 +527,28 @@ class CollectionController extends AbstractActionController
 
     public function ajaxNewRubricAction()
     {
-        $this->checkAccess();
+        $response = $this->getResponse();
+        if(!$this->ajaxCheckAccess()) {
+            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+        }                
+        $request = $this->getRequest();
+        if ($request->isXmlHttpRequest()) {            
+            $post = $this->getRequest()->getPost();            
+            $form = new RubricForm($this->em);
+            $rubric = new Rubric();            
+            $form->bind($rubric);
+            $form->setData($post);          
+            if ($form->isValid()) {
+                $this->collection->save($rubric);                                       
+                return $response->setContent(Json::encode(array('success' => 'Rubric has been added')));
+            } else {                    
+                $formData = [
+                    'Title' => $form->get('title')->getValue()
+                ];
+                return $response->setContent(Json::encode($formData));                    
+            }                     
+        }        
+        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
 
     }
     
@@ -507,7 +591,36 @@ class CollectionController extends AbstractActionController
 
     public function ajaxEditRubricAction()
     {
-
+        $response = $this->getResponse();
+        if(!$this->ajaxCheckAccess()) {
+            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+        }                
+        $request = $this->getRequest();
+        if ($request->isXmlHttpRequest()) {            
+            $post = $this->getRequest()->getPost();
+            $id = (int) $request->getPost('id');            
+            $form = new RubricForm($this->em);            
+            if (!$id) {                
+                return $response->setContent(Json::encode([]));
+            }
+            $rubric = $this->collection->getRubricById($id);
+            if ($rubric) {          
+                $form->bind($rubric);
+                $form->setData($post);          
+                if ($form->isValid()) {
+                    $this->collection->save($rubric);                                       
+                    return $response->setContent(Json::encode(array('success' => 'Rubric has been editing')));
+                } else {                    
+                    $formData = ['id' => $form->get('id')->getValue(),
+                        'title' => $form->get('title')->getValue()                        
+                    ];
+                    return $response->setContent(Json::encode($formData));                    
+                }                
+            } else {
+                return $response->setContent(Json::encode([]));
+            }            
+        }        
+        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
     }
     
     public function deleteRubricAction()
