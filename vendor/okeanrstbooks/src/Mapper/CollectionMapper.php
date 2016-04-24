@@ -50,7 +50,7 @@ class CollectionMapper
     
     public function add($entity)
 	{
-	    return $this->persist($entity);
+	    $this->persist($entity);
 	}
     
     public function save($entity)

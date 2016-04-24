@@ -19,12 +19,12 @@ class CollectionController extends AbstractActionController
 {
     protected $collection;
     
-    protected $em;
+    protected $em;    
 
     public function __construct($collectionService, EntityManager $entityManager)
     {
         $this->collection = $collectionService;
-        $this->em = $entityManager;
+        $this->em = $entityManager;        
     }    
     
     
@@ -66,14 +66,18 @@ class CollectionController extends AbstractActionController
         if (!$id) {
             return $this->redirect()->toRoute('books/collection');
         }
+        $author = $this->collection->getAuthorById($id);
         $page = $this->params()->fromRoute('page');
         $page = $page ? $page: 1;
         $itemCount = $this->params()->fromRoute('itemCount');
         $itemCount = $itemCount ? $itemCount : 10;
         $result = $this->collection->getBooksByAuthorPaginator($id, $page, $itemCount);
         if ($result) {
+            $bookForm = new BookForm($this->em);
             $view =  new ViewModel();
-            $view->collection = $result;        
+            $view->collection = $result;
+            $view->author = $author;
+            $view->bookForm = $bookForm;       
             return $view;
         }
         return $this->redirect()->toRoute('books/collection');
@@ -85,14 +89,18 @@ class CollectionController extends AbstractActionController
         if (!$id) {
             return $this->redirect()->toRoute('books/collection');
         }
+        $rubric = $this->collection->getRubricById($id);
         $page = $this->params()->fromRoute('page');
         $page = $page ? $page: 1;
         $itemCount = $this->params()->fromRoute('itemCount');
         $itemCount = $itemCount ? $itemCount : 10;
         $result = $this->collection->getBooksByAuthorPaginator($id, $page, $itemCount);
         if ($result) {
+            $bookForm = new BookForm($this->em);
             $view =  new ViewModel();
-            $view->collection = $result;        
+            $view->collection = $result;
+            $view->rubric = $rubric;
+            $view->bookForm = $bookForm;        
             return $view;
         }
         return $this->redirect()->toRoute('books/collection');
@@ -130,52 +138,35 @@ class CollectionController extends AbstractActionController
     
     public function newBookAction()
     {
-        $this->checkAccess();
-        $form = new BookForm($this->em);
-        $book = new Book();
-        if ($this->getRequest()->isPost()) {
-            $uploadManager = $this->getServiceLocator()->get('doctrine_extensions.uploadable');
-            $uploadManager->setDefaultPath('/');        
-            $files = $this->getRequest()->getFiles()->toArray();        
-            $photofile = new File();
-            $bookfile = new File();
-                        
-            $uploadManager->addEntityFileInfo($bookfile, $files['bookfile']);
-            $uploadManager->addEntityFileInfo($photofile, $files['photofile']);
-                  
-            
-            $book->setPhotofile($photofile);
-            $book->setBookfile($bookfile);
-        }
-               
-        $form->bind($book);
-        $submit = $form->get('submit');
-        $submit->setValue('Add book');       
-        if ($this->getRequest()->isPost()) {
-            $post = $this->getRequest()->getPost();
-            $form->setData($post);          
-            if ($form->isValid()) {                        
-                $result = $this->collection->addBook($book);
-                if ($result) {
-                    $this->flashMessenger()->addSuccessMessage('Book has been successfully added');                    
-                    //return $this->redirect()->toRoute('books/collection');
-                    return $this->redirect()->toRoute('books/newabook');
-                } else {
-                    $this->flashMessenger()->addErrorMessage('Error adding book');
-                    return $this->redirect()->toRoute('books/newbook');
-                }               
-            } else {
-                $this->flashMessenger()->addErrorMessage('Error adding book. Data failed');                
-                //return $this->redirect()->toRoute('books/newbook');                
-                $view =  new ViewModel();
-                $view->form = $form;        
-                return $view;
-            }
-            
-        }
+        $this->checkAccess();               
         $view =  new ViewModel();
-        $view->form = $form;        
-        
+        $form = new BookForm($this->em);         
+        if ($this->getRequest()->isPost()) {             
+            $book = new Book();
+            //$form->bind($book);
+            $form->setBindOnValidate(FormInterface::BIND_MANUAL);            
+            $request = $this->getRequest();
+            $post = array_merge_recursive(
+                $request->getPost()->toArray(),
+                $request->getFiles()->toArray()
+            );
+            $form->setData($post);          
+            if ($form->isValid()) {    
+                $data = $form->getData();
+                $form->setObject(new Book());
+                $form->bind($book);
+                $form->bindValues();                
+                $this->collection->addBook($book, $data);                
+                $this->flashMessenger()->addSuccessMessage('Book has been successfully added');         
+                return $this->redirect()->toRoute('books/newbook');                
+            } else {
+                $view->form = $form;      
+                return $view;               
+            }            
+        }        
+        $submit = $form->get('submit');
+        $submit->setValue('Add book');
+        $view->form = $form;      
         return $view;
     }
 
@@ -187,25 +178,24 @@ class CollectionController extends AbstractActionController
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
-            $post = $this->getRequest()->getPost();            
             $form = new BookForm($this->em);
-            $book = new Book();
-
-
-
-
-
-
-
-
-            $form->bind($book);
-            $form->setData($post);          
-            if ($form->isValid()) {
-                $this->collection->save($book);                                       
-                return $response->setContent(Json::encode(array('success' => 'Book has been edded')));
-            } else {             
-                return $response->setContent(Json::encode([]));                    
-            }                     
+            $book = new Book();               
+            //$form->bind($book);
+            $form->setBindOnValidate(FormInterface::BIND_MANUAL);
+            $post = array_merge_recursive(
+                $request->getPost()->toArray(),
+                $request->getFiles()->toArray()
+            );
+            $form->setData($post);
+            if ($form->isValid()) {    
+                $data = $form->getData();
+                $form->setObject(new Book());
+                $form->bind($book);
+                $form->bindValues();                
+                $this->collection->addBook($book, $data);                
+                return $response->setContent(Json::encode(array('success' => 'Author has been edded')));                                              
+            }
+            return $response->setContent(Json::encode(['error' => 'Data is not valid']));                                
         }        
         return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
     }
@@ -213,33 +203,104 @@ class CollectionController extends AbstractActionController
     public function editBookAction()
     {
         $this->checkAccess();
-        $id = (int) $this->params()->fromRoute('id');
+        $view =  new ViewModel();
+        $form = new BookForm($this->em);         
+        if ($this->getRequest()->isPost()) {          
+            $id = $request->getPost('id');
+            if (!$id) {
+            $this->flashMessenger()->addErrorMessage('Id not found in request');
+                return $this->redirect()->toRoute('books/collection');
+            }
+            $book = $this->collection->getBookById($id);
+            if (!$book) {
+                $this->flashMessenger()->addErrorMessage('Book with this id not found');
+                return $this->redirect()->toRoute('books/collection');
+            }
+            //$form->bind($book);
+            $form->setBindOnValidate(FormInterface::BIND_MANUAL);            
+            $request = $this->getRequest();
+            $post = array_merge_recursive(
+                $request->getPost()->toArray(),
+                $request->getFiles()->toArray()
+            );
+            $form->setData($post);          
+            if ($form->isValid()) {    
+                $data = $form->getData();
+                $data['curphotofile'] = $book->getPhotofile()->getArrayCopy();
+                $data['curbookfile'] = $book->getBookfile()->getArrayCopy();                
+                $form->setObject(new Book());
+                $form->bind($book);
+                $form->bindValues();                
+                $this->collection->editBook($book, $data);                
+                $this->flashMessenger()->addSuccessMessage('Book has been edit');         
+                return $this->redirect()->toRoute('books/newbook');                
+            } else {
+                $this->flashMessenger()->addErrorMessage('Book with this id not found');
+                return $this->redirect()->toRoute('books/editbook', ['id' => $id]);                
+            }            
+        }        
+        $id = $this->params()->fromRoute('id');
         if (!$id) {
+            $this->flashMessenger()->addErrorMessage('Id not found in request');
             return $this->redirect()->toRoute('books/collection');
         }
         $book = $this->collection->getBookById($id);
-        if (!$book || !$request->isPost()) {
+        if (!$book) {
+            $this->flashMessenger()->addErrorMessage('Book with this id not found');
             return $this->redirect()->toRoute('books/collection');
         }
-        $form = new BookForm($this->em);
-        $form->bind($book);      
-        $request = $this->getRequest();        
-        $form->setData($request->getPost());
-        if ($form->isValid()) {
-            $this->collection->save($book);            
-            $this->flashMessenger()->addSuccessMessage('Book has been successfully updated');
-            return $this->redirect()->toRoute('books/collection');            
-        } else {
-            $this->flashMessenger()->addErrorMessage('Error editing book. Data failed');                
-            $view =  new ViewModel();
-            $view->form = $form;        
-            return $view;
-        }        
+        $submit = $form->get('submit');
+        $submit->setValue('Edit book');
+        $form->bind($book);        
+        $view->form = $form;      
+        return $view;    
     }
 
     public function ajaxEditBookAction()
     {
-
+        $response = $this->getResponse();
+        if(!$this->ajaxCheckAccess()) {
+            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+        }                
+        $request = $this->getRequest();
+        if ($request->isXmlHttpRequest()) {            
+            $post = $this->getRequest()->getPost();
+            $id = $request->getPost('id');            
+            $form = new BookForm($this->em);            
+            if (!$id) {                
+                return $response->setContent(Json::encode(['error' => 'Id not found in request']));
+            }
+            $book = $this->collection->getBookById($id);
+            if (!$book) {                
+                return $response->setContent(Json::encode(['error' => 'Book with this id not found']));
+            }
+            $form->setBindOnValidate(FormInterface::BIND_MANUAL);            
+            $request = $this->getRequest();
+            $post = array_merge_recursive(
+                $request->getPost()->toArray(),
+                $request->getFiles()->toArray()
+            );
+            $form->setData($post);          
+            if ($form->isValid()) {    
+                $data = $form->getData();
+                $data['curphotofile'] = $book->getPhotofile()->getArrayCopy();
+                $data['curbookfile'] = $book->getBookfile()->getArrayCopy();                
+                $form->setObject(new Book());
+                $form->bind($book);
+                $form->bindValues();                
+                $this->collection->editBook($book, $data);                
+                return $response->setContent(Json::encode(array('success' => 'Book has been editing')));
+            } else {
+                $form->bind($book);
+                $formData = ['id' => $form->get('id')->getValue(),
+                    'title' => $form->get('title')->getValue(),
+                    'author' => $form->get('author')->getValue(),
+                    'rubric[]' => $form->get('rubric')->getValue()
+                ];
+                return $response->setContent(Json::encode(['success' => $formData]));
+            }                
+        }        
+        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
     }
 
     public function deleteBookAction()
@@ -290,7 +351,7 @@ class CollectionController extends AbstractActionController
             }
             $book = $this->collection->getBookById($id);
             if ($book) {                   
-                $this->collection->delete($book);                                        
+                $this->collection->deleteBook($book);                                        
                 return $response->setContent(Json::encode(array('success' => 'Book has been deleted')));
             } else {
                 return $response->setContent(Json::encode(array('error' => 'Book not found')));
@@ -302,36 +363,28 @@ class CollectionController extends AbstractActionController
     public function newAuthorAction()
     {
         $this->checkAccess();
-        $form = new AuthorForm($this->em);
-        $entity = new Author();       
-        $form->bind($entity);
-        $submit = $form->get('submit');
-        $submit->setValue('Add author');        
+        $view =  new ViewModel();                
         if ($this->getRequest()->isPost()) {
+            $form = new AuthorForm($this->em);
+            $entity = new Author();       
+            $form->bind($entity);
+            $submit = $form->get('submit');
+            $submit->setValue('Add author');
             $post = $this->getRequest()->getPost();
             $form->setData($post);          
             if ($form->isValid()) {                        
-                $result = $this->collection->addAuthor($entity);
-                if ($result) {
-                    $this->flashMessenger()->addSuccessMessage('Athor has been successfully added');                    
-                    //return $this->redirect()->toRoute('books/collection');
-                    return $this->redirect()->toRoute('books/newauthor');
-                } else {
-                    $this->flashMessenger()->addErrorMessage('Error adding author');
-                    return $this->redirect()->toRoute('books/newauthor');
-                }               
-            } else {
-                $this->flashMessenger()->addErrorMessage('Error adding author. Data failed');
-                //return $this->redirect()->toRoute('books/newauthor');                
-                $view =  new ViewModel();
+                $this->collection->addAuthor($entity);                
+                $this->flashMessenger()->addSuccessMessage('Author has been successfully added');
+                return $this->redirect()->toRoute('books/newauthor');            
+            } else {               
                 $view->form = $form;        
                 return $view;
-            }
-            
-        }
-        $view =  new ViewModel();
-        $view->form = $form;        
-        
+            }            
+        }        
+        $form = new AuthorForm($this->em);
+        $submit = $form->get('submit');
+        $submit->setValue('Add author');
+        $view->form = $form;
         return $view;
     }
 
@@ -407,7 +460,7 @@ class CollectionController extends AbstractActionController
             $id = (int) $request->getPost('id');            
             $form = new AuthorForm($this->em);            
             if (!$id) {                
-                return $response->setContent(Json::encode([]));
+                return $response->setContent(Json::encode(['error' => 'id not found']));
             }
             $author = $this->collection->getAuthorById($id);
             if ($author) {          
@@ -421,11 +474,11 @@ class CollectionController extends AbstractActionController
                         'lastName' => $form->get('lastName')->getValue(),
                         'name' => $form->get('name')->getValue()
                     ];
-                    return $response->setContent(Json::encode($formData));                    
+                    return $response->setContent(Json::encode(['success' => $formData]));                    
                 }          
                 
             } else {
-                return $response->setContent(Json::encode([]));
+                return $response->setContent(Json::encode(['error' => 'author not found']));
             }            
         }        
         return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
@@ -491,37 +544,29 @@ class CollectionController extends AbstractActionController
     
     public function newRubricAction()
     {
-        $this->checkAccess();
-        $form = new RubricForm($this->em);
-        $entity = new Rubric();       
-        $form->bind($entity);
-        $submit = $form->get('submit');
-        $submit->setValue('Add rubric');        
+        $this->checkAccess();                
+        $view =  new ViewModel();
         if ($this->getRequest()->isPost()) {
+            $form = new RubricForm($this->em);
+            $entity = new Rubric();       
+            $form->bind($entity);
+            $submit = $form->get('submit');
+            $submit->setValue('Add rubric');
             $post = $this->getRequest()->getPost();
             $form->setData($post);          
             if ($form->isValid()) {                        
-                $result = $this->collection->addRubric($entity);
-                if ($result) {
-                    $this->flashMessenger()->addSuccessMessage('Rubric has been successfully added');                    
-                    //return $this->redirect()->toRoute('books/collection');
-                    return $this->redirect()->toRoute('books/newrubric');
-                } else {
-                    $this->flashMessenger()->addErrorMessage('Error adding author');
-                    return $this->redirect()->toRoute('books/newrubric');
-                }               
-            } else {
-                $this->flashMessenger()->addErrorMessage('Error adding rubric. Data failed');
-                //return $this->redirect()->toRoute('books/newrubric');                
-                $view =  new ViewModel();
+                $this->collection->addRubric($entity);                
+                $this->flashMessenger()->addSuccessMessage('Rubric has been successfully added');
+                return $this->redirect()->toRoute('books/newrubric');            
+            } else {              
                 $view->form = $form;        
                 return $view;
-            }
-            
-        }
-        $view =  new ViewModel();
-        $view->form = $form;        
-        
+            }            
+        }        
+        $form = new RubricForm($this->em);
+        $submit = $form->get('submit');
+        $submit->setValue('Add rubric');
+        $view->form = $form;
         return $view;
     }
 
@@ -601,7 +646,7 @@ class CollectionController extends AbstractActionController
             $id = (int) $request->getPost('id');            
             $form = new RubricForm($this->em);            
             if (!$id) {                
-                return $response->setContent(Json::encode([]));
+                return $response->setContent(Json::encode(['error' => 'Id not found']));
             }
             $rubric = $this->collection->getRubricById($id);
             if ($rubric) {          
@@ -614,10 +659,10 @@ class CollectionController extends AbstractActionController
                     $formData = ['id' => $form->get('id')->getValue(),
                         'title' => $form->get('title')->getValue()                        
                     ];
-                    return $response->setContent(Json::encode($formData));                    
+                    return $response->setContent(Json::encode(['success' => $formData]));                    
                 }                
             } else {
-                return $response->setContent(Json::encode([]));
+                return $response->setContent(Json::encode(['error' => 'Rubric not found']));
             }            
         }        
         return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
@@ -696,103 +741,4 @@ class CollectionController extends AbstractActionController
         }
         return true;
     }
-/*
-    public function indexAction()
-    {
-        return new ViewModel(array(
-            'albums' => $this->getEntityManager()->getRepository('Album\Entity\Album')->findAll(),
-        ));
-    }
-
-    public function addAction()
-    {
-        $form = new AlbumForm();
-        $form->get('submit')->setValue('Add');
-
-        $request = $this->getRequest();
-        if ($request->isPost()) {
-            $album = new Album();
-            $form->setInputFilter($album->getInputFilter());
-            $form->setData($request->getPost());
-
-            if ($form->isValid()) {
-                $album->exchangeArray($form->getData());
-                $this->getEntityManager()->persist($album);
-                $this->getEntityManager()->flush();
-
-                // Redirect to list of albums
-                return $this->redirect()->toRoute('album');
-            }
-        }
-        return array('form' => $form);
-    }
-
-    public function editAction()
-    {
-        $id = (int) $this->params()->fromRoute('id', 0);
-        if (!$id) {
-            return $this->redirect()->toRoute('album', array(
-                'action' => 'add'
-            ));
-        }
-
-        $album = $this->getEntityManager()->find('Album\Entity\Album', $id);
-        if (!$album) {
-            return $this->redirect()->toRoute('album', array(
-                'action' => 'index'
-            ));
-        }
-
-        $form  = new AlbumForm();
-        $form->bind($album);
-        $form->get('submit')->setAttribute('value', 'Edit');
-
-        $request = $this->getRequest();
-        if ($request->isPost()) {
-            $form->setInputFilter($album->getInputFilter());
-            $form->setData($request->getPost());
-
-            if ($form->isValid()) {
-                $this->getEntityManager()->flush();
-
-                // Redirect to list of albums
-                return $this->redirect()->toRoute('album');
-            }
-        }
-
-        return array(
-            'id' => $id,
-            'form' => $form,
-        );
-    }
-
-    public function deleteAction()
-    {
-        $id = (int) $this->params()->fromRoute('id', 0);
-        if (!$id) {
-            return $this->redirect()->toRoute('album');
-        }
-
-        $request = $this->getRequest();
-        if ($request->isPost()) {
-            $del = $request->getPost('del', 'No');
-
-            if ($del == 'Yes') {
-                $id = (int) $request->getPost('id');
-                $album = $this->getEntityManager()->find('Album\Entity\Album', $id);
-                if ($album) {
-                    $this->getEntityManager()->remove($album);
-                    $this->getEntityManager()->flush();
-                }
-            }
-
-            // Redirect to list of albums
-            return $this->redirect()->toRoute('album');
-        }
-
-        return array(
-            'id'    => $id,
-            'album' => $this->getEntityManager()->find('Album\Entity\Album', $id)
-        );
-    }*/
 }

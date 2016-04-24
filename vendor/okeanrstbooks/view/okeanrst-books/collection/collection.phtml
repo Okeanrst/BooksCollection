@@ -2,20 +2,18 @@
 $title = $this->translate('Books collection');
 $this->headTitle($title);
 ?>
-<h1><?php echo $this->escapeHtml($title) ?></h1>
+<h1 class="ajaxfile" ><?php echo $this->escapeHtml($title) ?></h1>
 <div id="flashMessage" class="hidden"></div>
 <?php if ($this->zfcUserIdentity()):?>
      <a class="ajaxnew" href="<?php echo $this->url('books/newbook') ?>" >Add new book</a>      
 <?php endif; ?>
-<?php echo $this->partial('bookcollection.phtml', array('collection' => $this->collection,)) ?>
+<?php echo $this->partial('bookcollection.phtml', array('collection' => $this->collection, 'bookForm' => $this->bookForm)) ?>
 
 <?php if ($this->collection) {
     echo $this->paginationControl($this->collection, 'sliding', 'partial/paginator', array());
 } ?>
-<?php if ($this->collection) {
-    echo $this->paginationControl($this->collection, 'sliding', 'partial/paginator', array());
-} ?>
 <div id="cover" class="hidden"></div>
+<div id="ajaxpagefile" class="hidden"><embed width="100%" height="100%" name="plugin" id="plugin" src="" type="" internalinstanceid="3" title=""></div>
 <div id="ajaxnew" class="hidden">
     <?php 
     $this->bookForm->setAttribute('name', 'newbook');    
@@ -34,22 +32,16 @@ $this->headTitle($title);
 </div>
 
 <script>
-    //var curUrl = '<?php //echo $this->url() ?>';    
-    var reload = true; //reload page after action
-    //var url = '<?php //echo $this->url('books/ajaxdeletebook') ?>';
-    //var formName = '<?php //echo $formName ?>';
+    var reload = true; //reload page after ajax action    
     var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
     var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
-    var mess = $('#flashMessage');
-
-    
+    var mess = $('#flashMessage');    
 
     $(document).ready(function() {               
         flashMessage(mess, error, success);
         $('.ajaxnew').click(newAction);
         $('.ajaxedit').click(editAction);
         $('.ajaxdel').click(deleteAction);
-    });
-
-    
+        $('.ajaxfile').click(loadPage);
+    });    
 </script>

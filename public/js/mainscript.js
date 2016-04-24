@@ -1,5 +1,6 @@
 function flashMessage(mess, error, success) {
     if (error !== '') {
+        console.log(error);
         mess.html(error);           
         mess.addClass("error");
         mess.removeClass("hidden");
@@ -8,6 +9,7 @@ function flashMessage(mess, error, success) {
             mess.removeClass("error");
         }, 9000)
     } else if (success !== '') {
+        console.log(error);
         mess.html(success);         
         mess.addClass("success");
         mess.removeClass("hidden");
@@ -16,6 +18,22 @@ function flashMessage(mess, error, success) {
             mess.removeClass("success");
         }, 3000);
     }
+}
+
+function loadPage(e) {
+    e.preventDefault();
+    $('#cover').removeClass('hidden').addClass('cover');
+    $('#cover').click(function() {
+        $('#cover').removeClass('cover').addClass('hidden');
+        $('#ajaxpagefile').removeClass('ajaxpage').addClass('hidden');        
+    });
+    var target = e.target;
+    var url = $(target).attr('href');       
+    var type = target.dataset.type;
+    console.log(type);
+    $('embed', $('#ajaxpagefile')).attr('src', url);   
+    $('#ajaxpagefile').removeClass('hidden').addClass('ajaxpage');
+    
 }
 
 function newAction(e) {
@@ -56,27 +74,32 @@ function newAction(e) {
             url: url, 
             data: formData,
             success: function(result){                        
-                var data = JSON.parse(result);
-                $(ajaxpage).removeClass('ajaxpage').addClass('hidden');
-                $('#cover').removeClass('cover').addClass('hidden');             
+                try {
+                    var data = JSON.parse(result);                    
+                } catch (e) {
+                    flashMessage(mess, 'Error JSON', '');
+                    data['error'] = '';
+                    data['success'] = '';                                                                
+                } 
+                flashMessage(mess, data['error'], data['success']);                                                       
+                ajaxpage.removeClass('ajaxpage').addClass('hidden');
+                $('#cover').removeClass('cover').addClass('hidden');                    
+                cancel.remove();                            
                 $('input[type!="submit"]', $(ajaxform)).each(function() {
                     this.value = '';
                 });
-                flashMessage(mess, data['error'], data['success']);
                 if (reload) {
                     window.location.reload();
                 }
             },
             error: function(result) {
-                console.log(result);                
-                cancel.click(function(){
-                    ajaxpage.removeClass('ajaxpage').addClass('hidden');
-                    $('#cover').removeClass('cover').addClass('hidden');                    
-                    cancel.remove();
-                    $(ajaxform).unbind("submit");
-                    $('input[type!="submit"]', $(ajaxform)).each(function() {
-                        this.value = '';
-                    });                    
+                console.log(result);                            
+                flashMessage(mess, 'AJAX error', '');
+                ajaxpage.removeClass('ajaxpage').addClass('hidden');
+                $('#cover').removeClass('cover').addClass('hidden');                    
+                cancel.remove();                            
+                $('input[type!="submit"]', $(ajaxform)).each(function() {
+                    this.value = '';
                 });
             }                    
         });        
@@ -114,22 +137,42 @@ function editAction(e) {
                     $('#cover').removeClass('cover').addClass('hidden');                    
                     cancel.remove();
                     $(ajaxform).unbind("submit");
-                    for (property in fields) {
-                        var elem = ajaxform[property];
-                        elem.value = '';
-                    }
+                    $('input[type!="submit"]', $(ajaxform)).each(function() {
+                        this.value = '';
+                    });
                 });                
-                var data = JSON.parse(result);                                               
-                if (!isFinite(data['id'])) {
-                    $('#cover').removeClass('cover').addClass('hidden');
-                    cancel.remove();                    
+                try {
+                    var data = JSON.parse(result);                    
+                } catch (e) {
+                    flashMessage(mess, 'Error JSON', '');
+                    $(cancel).click();
                     return;
-                }                
-                for (property in data) {
-                    var elem = ajaxform[property];
-                    elem.value = data[property];
-                    fields.push(property);
                 }
+                if (data.error || !data.success) {
+                    flashMessage(mess, data.error, '');
+                    $(cancel).click();
+                    return;
+                }                                               
+                data = data.success;
+                if (!isFinite(data['id'])) {
+                    flashMessage(mess, 'id is not digit', '');
+                    $(cancel).click();                    
+                    return;
+                }               
+                    
+                for (property in data) {                    
+                    var elem = ajaxform[property];                    
+                    if (-1 !== property.indexOf('[]')) {                        
+                        var values = data[property].toString().split(',');                        
+                        for(var val in values) {
+                            elem[values[val]].selected = true;                                                       
+                        }
+                    } else {                        
+                        elem.value = data[property];
+                        fields.push(property);
+                    }                        
+                }
+                                
                 $(ajaxpage).removeClass('hidden').addClass('ajaxpage');                
 
                 $(ajaxform).submit(function(e) { 
@@ -142,30 +185,33 @@ function editAction(e) {
                         contentType: false,
                         url: url, 
                         data: formData,
-                        success: function(result){                        
-                            $(ajaxpage).removeClass('ajaxpage').addClass('hidden');
-                            $('#cover').removeClass('cover').addClass('hidden');                            
-                            var data = JSON.parse(result);
-                            for (property in fields) {
-                                var elem = ajaxform[property];
-                                elem.value = '';
-                            }
-                            flashMessage(mess, data['error'], data['success']);
+                        success: function(result){
+                            try {
+                                var data = JSON.parse(result);                    
+                            } catch (e) {
+                                flashMessage(mess, 'Error JSON', '');
+                                data['error'] = '';
+                                data['success'] = '';                                                                
+                            } 
+                            flashMessage(mess, data['error'], data['success']);                                                       
+                            ajaxpage.removeClass('ajaxpage').addClass('hidden');
+                            $('#cover').removeClass('cover').addClass('hidden');                    
+                            cancel.remove();                            
+                            $('input[type!="submit"]', $(ajaxform)).each(function() {
+                                this.value = '';
+                            });                            
                             if (reload) {
-                                window.location.reload();
+                                    window.location.reload();
                             }
                         },
                         error: function(result) {
-                            console.log(result);
-                            cancel.click(function(){
-                                ajaxpage.removeClass('ajaxpage').addClass('hidden');
-                                $('#cover').removeClass('cover').addClass('hidden');                                
-                                cancel.remove();
-                                $(ajaxform).unbind("submit");
-                                for (property in fields) {
-                                    var elem = ajaxform[property];
-                                    elem.value = '';
-                                }
+                            console.log(result);                            
+                            flashMessage(mess, 'AJAX error', '');
+                            ajaxpage.removeClass('ajaxpage').addClass('hidden');
+                            $('#cover').removeClass('cover').addClass('hidden');                    
+                            cancel.remove();                            
+                            $('input[type!="submit"]', $(ajaxform)).each(function() {
+                                this.value = '';
                             });
                         }                    
                     });

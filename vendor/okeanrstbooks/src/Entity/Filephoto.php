@@ -1,39 +1,54 @@
 <?php
+
 namespace OkeanrstBooks\Entity;
 
-use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ * Filephoto
+ *
+ * @ORM\Table(name="Filephoto")
  * @ORM\Entity
- * @Gedmo\Uploadable(path="/", filenameGenerator="SHA1", allowOverwrite=true, appendNumber=true)
  */
-class File
+class Filephoto
 {
     /**
-     * @ORM\Column(type="integer")
+     * @var integer
+     *
+     * @ORM\Column(name="id", type="integer", precision=0, scale=0, nullable=false, unique=false)
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=64, nullable=false, unique=false)
-     * @Gedmo\UploadableFileName
+     * @var string
+     *
+     * @ORM\Column(name="path", type="string", precision=0, scale=0, nullable=false, unique=false)
+     */
+    private $path;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=64, precision=0, scale=0, nullable=false, unique=false)
      */
     private $name;
 
     /**
-     * @ORM\Column(type="string", length=64, nullable=true, unique=true)
-     * @Gedmo\UploadableFileMimeType
+     * @var string
+     *
+     * @ORM\Column(name="mimeType", type="string", length=64, precision=0, scale=0, nullable=true, unique=false)
      */
     private $mimeType;
 
     /**
-     * @ORM\Column(type="decimal")
-     * @Gedmo\UploadableFileSize
+     * @var string
+     *
+     * @ORM\Column(name="size", type="decimal", precision=0, scale=0, nullable=false, unique=false)
      */
-    private $size;   
+    private $size;
+
 
     /**
      * Get id
@@ -139,6 +154,11 @@ class File
     public function getSize()
     {
         return $this->size;
-    }  
-    
+    }
+
+    public function getArrayCopy() 
+    {
+        return get_object_vars($this);
+    }
 }
+

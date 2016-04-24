@@ -23,8 +23,9 @@ class BookForm extends Form
 	{
         parent::__construct($this->name);
         $this->objectManager = $objectManager;        
-        $this->setHydrator(new ClassMethods());
-        $this->setHydrator(new DoctrineHydrator($objectManager))->setObject(new Book());
+        //$this->setHydrator(new ClassMethods());
+        $this->setHydrator(new DoctrineHydrator($objectManager));
+        //$this->setObject(new Book());
         
         
         $this->add(array(
@@ -188,7 +189,7 @@ class BookForm extends Form
                         'name' => 'filerenameupload',
                         'options' => array(
                             'use_upload_extension' => true,
-                            'target'    => './public/data/books',
+                            'target'    => './public/data/img/',
                             'randomize' => true,
                             'overwrite' => false
                         )

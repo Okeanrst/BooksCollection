@@ -7,11 +7,14 @@ use Zend\Paginator\Paginator;
 
 class CollectionService
 {
-    protected $mapper;   
+    protected $mapper;
+
+    protected $imageService;   
     
-    public function __construct($collectionMapper)
+    public function __construct($collectionMapper, $imageService)
     {
-        $this->mapper = $collectionMapper;        
+        $this->mapper = $collectionMapper;
+        $this->imageService = $imageService;     
     }
     
     public function getAllBooks()
@@ -88,14 +91,112 @@ class CollectionService
         return false;
     }
     
-    public function addBook(\OkeanrstBooks\Entity\Book $entity)
+    public function addBook(\OkeanrstBooks\Entity\Book $book, $data)
+    {        
+        $photofile = new \OkeanrstBooks\Entity\Filephoto();
+        $bookfile = new \OkeanrstBooks\Entity\Filebook();
+        
+        $pathPhoto = str_replace('\\', '/', $data['photofile']['tmp_name']);
+        $pathBook = str_replace('\\', '/', $data['bookfile']['tmp_name']);
+        
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $photoType = finfo_file($finfo, $pathPhoto);
+        $photoType = ($photoType)? $photoType : $data['photofile']['type'];
+        $photoType = ($photoType)? $photoType : '';
+        $photofile->setMimeType($photoType);
+        $bookType = finfo_file($finfo, $pathBook);
+        $bookType = ($bookType)? $bookType : $data['bookfile']['type'];
+        $bookType = ($bookType)? $bookType : '';
+        $bookfile->setMimeType($bookType);
+        finfo_close($finfo);
+
+        $this->imageService->makePreview($pathPhoto, 80, 80);
+
+        $pathPhoto = substr($pathPhoto, stripos($pathPhoto, 'public') + 7);
+        $pathBook = substr($pathBook, stripos($pathBook, 'public') + 7);
+
+        $photofile->setPath($pathPhoto);
+        $bookfile->setPath($pathBook);
+
+        
+
+        $photofile->setSize($data['photofile']['size']);
+        $bookfile->setSize($data['bookfile']['size']);
+
+        $namePhoto = substr($pathPhoto, strripos($pathPhoto, '/')+1);
+        $nameBook = substr($pathBook, strripos($pathBook, '/')+1);
+
+        $photofile->setName($namePhoto);
+        $bookfile->setName($nameBook);
+
+        $book->setPhotofile($photofile);
+        $book->setBookfile($bookfile);
+
+        $this->mapper->save($book);
+    }
+
+    public function editBook(\OkeanrstBooks\Entity\Book $book, $data)
     {
-        $author = $entity->getAuthor();
-        /*if (!is_a($author, 'OkeanrstBooks\Entity\Author')) {
-            $author = $this->mapper->getAuthorById($author);
-            $entity->setAuthor($author);
-        }*/
-        return $this->mapper->add($entity);
+        /*$photofile = $book->getPhotofile();
+        $bookfile = $book->getBookfile();
+
+        $pathPhoto = str_replace('\\', '/', $data['photofile']['tmp_name']);
+        $pathBook = str_replace('\\', '/', $data['bookfile']['tmp_name']);
+
+        $namePhoto = substr($pathPhoto, strripos($pathPhoto, '/')+1);
+        $nameBook = substr($pathBook, strripos($pathBook, '/')+1);
+
+        $curNamePhoto = $data['curphotofile']['name'];
+        $curNameBook = $data['curbookfile']['name'];
+
+        $curPathPhoto = './public/'.$data['curphotofile']['path'];
+        $curPathBook = './public/'.$data['curbookfile']['path'];
+
+        $curSizePhoto = $data['curphotofile']['size'];
+
+        if ($photofile->getSize() !== $data['photofile']['size'] && 
+            isset($namePhoto) &&  $curNamePhoto !== $namePhoto) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $photoType = finfo_file($finfo, $pathPhoto);
+            $photoType = ($photoType)? $photoType : $data['photofile']['type'];
+            $photoType = ($photoType)? $photoType : '';
+            $photofile->setMimeType($photoType);
+            finfo_close($finfo);
+            $this->imageService->makePreview($pathPhoto, 80, 80);
+            unlink($curPathPhoto);
+            $pathPhoto = substr($pathPhoto, stripos($pathPhoto, 'public') + 7);
+            $photofile->setPath($pathPhoto);
+            $photofile->setName($namePhoto);
+            $photofile->setSize($data['photofile']['size']);
+        }
+
+        if ($bookfile->getSize() !== $data['bookfile']['size'] && 
+            isset($nameBook) &&  $curNameBook !== $nameBook) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $bookType = finfo_file($finfo, $pathBook);
+            $bookType = ($bookType)? $bookType : $data['bookfile']['type'];
+            $bookType = ($bookType)? $bookType : '';
+            $bookfile->setMimeType($bookType);
+            finfo_close($finfo);            
+            unlink($curPathBook);
+            $pathPhoto = substr($pathBook, stripos($pathBook, 'public') + 7);
+            $bookfile->setPath($pathBook);
+            $bookfile->setName($nameBook);
+            $bookfile->setSize($data['bookfile']['size']);
+        }
+
+        $this->mapper->save($book);*/
+        $curPathPhoto = './public/'.$data['curphotofile']['path'];
+        $curPathBook = './public/'.$data['curbookfile']['path'];
+
+        $this->addBook($book, $data);
+        unlink($curPathPhoto);
+        unlink($curPathBook);
+    }
+
+    public function deleteBook(\OkeanrstBooks\Entity\Book $book)
+    {
+
     }
     
     public function addAuthor(\OkeanrstBooks\Entity\Author $entity)

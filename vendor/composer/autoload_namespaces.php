@@ -13,7 +13,7 @@ return array(
     'ZendXml\\' => array($vendorDir . '/zendframework/zendxml/library'),
     'Psr\\Log\\' => array($vendorDir . '/psr/log'),
     'Prophecy\\' => array($vendorDir . '/phpspec/prophecy/src'),
-    'Gedmo\\' => array($vendorDir . '/gedmo/doctrine-extensions/lib'),
+    'Imagine' => array($vendorDir . '/imagine/imagine/lib'),
     'Doctrine\\ORM\\' => array($vendorDir . '/doctrine/orm/lib'),
     'Doctrine\\DBAL\\' => array($vendorDir . '/doctrine/dbal/lib'),
     'Doctrine\\Common\\Lexer\\' => array($vendorDir . '/doctrine/lexer/lib'),
@@ -22,5 +22,4 @@ return array(
     'Doctrine\\Common\\Annotations\\' => array($vendorDir . '/doctrine/annotations/lib'),
     'DoctrineORMModule\\' => array($vendorDir . '/doctrine/doctrine-orm-module/src'),
     'DoctrineModule\\' => array($vendorDir . '/doctrine/doctrine-module/src'),
-    'Behat\\Transliterator' => array($vendorDir . '/behat/transliterator/src'),
 );

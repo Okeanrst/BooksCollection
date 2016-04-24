@@ -14,7 +14,7 @@ class CollectionControllerFactory implements FactoryInterface
     {
         $parentLocator = $container->getServiceLocator();
         $collectionService = $parentLocator->get(CollectionService::class);
-        $entityManager = $parentLocator->get('doctrine.entitymanager.orm_default');
+        $entityManager = $parentLocator->get('doctrine.entitymanager.orm_default');        
         return new CollectionController($collectionService, $entityManager);
     }
     

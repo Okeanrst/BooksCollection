@@ -3,6 +3,7 @@ namespace OkeanrstBooks;
 
 use OkeanrstBooks\Service\CollectionService;
 use OkeanrstBooks\Service\CollectionMapper;
+use OkeanrstBooks\Service\ImageService;
 
 return array(
     'controllers' => array(
@@ -14,6 +15,7 @@ return array(
         'factories' => [
             CollectionService::class => Factory\Service\CollectionServiceFactory::class,
             CollectionMapper::class => Factory\Service\CollectionMapperFactory::class,
+            ImageService::class => Factory\Service\ImageServiceFactory::class,
         ],
         'invokables' => [
             'doctrine_extensions.uploadable'    => 'Gedmo\Uploadable\UploadableListener'
@@ -29,7 +31,7 @@ return array(
         
     ),    
     // Doctrine config
-    'doctrine' => array(
+    'doctrine' => array(        
         'driver' => array(
             __NAMESPACE__ . '_driver' => array(
                 'class' => 'Doctrine\ORM\Mapping\Driver\AnnotationDriver',
@@ -88,7 +90,7 @@ return array(
                     'editbook' => array(
                         'type' => 'segment',
                         'options' => array(
-                            'route' => '/editbook/:id',
+                            'route' => '/editbook[/:id]',
                             'constraints' => array(
                                 'id'     => '[0-9]+',                                
                             ),                            
@@ -228,7 +230,7 @@ return array(
                     'editrubric' => array(
                         'type' => 'segment',
                         'options' => array(
-                            'route' => '/editrubric/:id',
+                            'route' => '/editrubric[/:id]',
                             'constraints' => array(
                                 'id'     => '[0-9]+',                                
                             ),                            

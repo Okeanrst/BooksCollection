@@ -12,7 +12,7 @@ use Zend\InputFilter\InputFilterInterface;
  * Book
  *
  * @ORM\Table(name="books")
- * @ORM\Entity
+ * @ORM\Entity 
  */
 class Book
 {
@@ -33,11 +33,11 @@ class Book
     private $title;
 
     /**
-     * @var \OkeanrstBooks\Entity\File
+     * @var \OkeanrstBooks\Entity\Filephoto
      *
-     * @ORM\OneToOne(targetEntity="OkeanrstBooks\Entity\File", cascade={"all","merge","persist","refresh","remove"})
+     * @ORM\OneToOne(targetEntity="OkeanrstBooks\Entity\Filephoto", cascade={"persist"})
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="photo_id", referencedColumnName="id", unique=true, nullable=true, onDelete="CASCADE")
+     *   @ORM\JoinColumn(name="filephotos_id", referencedColumnName="id", unique=true, nullable=true)
      * })
      */
     private $photofile;
@@ -68,13 +68,14 @@ class Book
     private $author;
 
     /**
-     * @var \OkeanrstBooks\Entity\File
+     * @var \OkeanrstBooks\Entity\Filebook
      *
-     * @ORM\OneToOne(targetEntity="OkeanrstBooks\Entity\File", cascade={"all","merge","persist","refresh","remove"})
+     * @ORM\OneToOne(targetEntity="OkeanrstBooks\Entity\Filebook", cascade={"persist"})
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="file_id", referencedColumnName="id", unique=true, nullable=false, onDelete="CASCADE")
+     *   @ORM\JoinColumn(name="filebooks_id", referencedColumnName="id", unique=true, nullable=false)
      * })
      */
+    
     private $bookfile;
 
     /**
@@ -122,11 +123,11 @@ class Book
     /**
      * Set photofile
      *
-     * @param \OkeanrstBooks\Entity\File $photofile
+     * @param \OkeanrstBooks\Entity\Filebook $bookfile
      *
      * @return Book
      */
-    public function setPhotofile(\OkeanrstBooks\Entity\File $photofile = null)
+    public function setPhotofile(\OkeanrstBooks\Entity\Filephoto $photofile = null)
     {
         $this->photofile = $photofile;
 
@@ -136,7 +137,7 @@ class Book
     /**
      * Get photofile
      *
-     * @return \OkeanrstBooks\Entity\File
+     * @return \OkeanrstBooks\Entity\Filebook
      */
     public function getPhotofile()
     {
@@ -204,11 +205,11 @@ class Book
     /**
      * Set bookfile
      *
-     * @param \OkeanrstBooks\Entity\File $bookfile
+     * @param \OkeanrstBooks\Entity\Filebook $bookfile
      *
      * @return Book
      */
-    public function setBookfile(\OkeanrstBooks\Entity\File $bookfile = null)
+    public function setBookfile(\OkeanrstBooks\Entity\Filebook $bookfile = null)
     {
         $this->bookfile = $bookfile;
 
@@ -218,11 +219,16 @@ class Book
     /**
      * Get bookfile
      *
-     * @return \OkeanrstBooks\Entity\File
+     * @return \OkeanrstBooks\Entity\Filebook
      */
     public function getBookfile()
     {
         return $this->bookfile;
-    } 
+    }
+
+    public function getPath()
+    {
+        return '/';
+    }
     
 }

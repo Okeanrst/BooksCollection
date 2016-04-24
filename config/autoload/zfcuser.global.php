@@ -40,7 +40,7 @@ $settings = array(
      *
      * Accepted values: boolean true or false
      */
-    'enable_username' => true,
+    //'enable_username' => false,
 
     /**     
      * Authentication Adapters
@@ -101,7 +101,7 @@ $settings = array(
      *
      * Accepted values: boolean true or false
      */
-    'login_after_registration' => true,
+    //'login_after_registration' => true,
 
     /**
      * Registration Form Captcha
