@@ -33,6 +33,8 @@ class CollectionController extends AbstractActionController
     {
         $books = $this->collection->getAllBooksPaginator((int)$this->params()->fromQuery('page', 1), 10);        
         $bookForm = new BookForm($this->em);
+        $bookForm->get('photofile')->setAttribute('required', '');
+        $bookForm->get('bookfile')->setAttribute('required', '');
         if ($books) {
                         
             return new ViewModel(array('collection' => $books, 'bookForm' => $bookForm));
@@ -51,10 +53,14 @@ class CollectionController extends AbstractActionController
         if (!$id) {
             return $this->redirect()->toRoute('books/collection');
         }         
-        $result = $this->collection->getBookById($id);
-        if ($result) {
+        $book = $this->collection->getBookById($id);
+        if ($book) {
             $view =  new ViewModel();
-            $view->entity = $result;        
+            $bookForm = new BookForm($this->em);
+            $bookForm->get('photofile')->setAttribute('required', '');
+            $bookForm->get('bookfile')->setAttribute('required', '');
+            $view->bookForm = $bookForm;
+            $view->entity = $book;        
             return $view;
         }
         return $this->redirect()->toRoute('books/collection'); 
@@ -74,6 +80,8 @@ class CollectionController extends AbstractActionController
         $result = $this->collection->getBooksByAuthorPaginator($id, $page, $itemCount);
         if ($result) {
             $bookForm = new BookForm($this->em);
+            $bookForm->get('photofile')->setAttribute('required', '');
+            $bookForm->get('bookfile')->setAttribute('required', '');
             $view =  new ViewModel();
             $view->collection = $result;
             $view->author = $author;
@@ -94,9 +102,11 @@ class CollectionController extends AbstractActionController
         $page = $page ? $page: 1;
         $itemCount = $this->params()->fromRoute('itemCount');
         $itemCount = $itemCount ? $itemCount : 10;
-        $result = $this->collection->getBooksByAuthorPaginator($id, $page, $itemCount);
+        $result = $this->collection->getBooksByRubricPaginator($id, $page, $itemCount);
         if ($result) {
             $bookForm = new BookForm($this->em);
+            $bookForm->get('photofile')->setAttribute('required', '');
+            $bookForm->get('bookfile')->setAttribute('required', '');
             $view =  new ViewModel();
             $view->collection = $result;
             $view->rubric = $rubric;
@@ -140,7 +150,9 @@ class CollectionController extends AbstractActionController
     {
         $this->checkAccess();               
         $view =  new ViewModel();
-        $form = new BookForm($this->em);         
+        $form = new BookForm($this->em);        
+        $submit = $form->get('submit');
+        $submit->setValue('Add book');         
         if ($this->getRequest()->isPost()) {             
             $book = new Book();
             //$form->bind($book);
@@ -160,12 +172,10 @@ class CollectionController extends AbstractActionController
                 $this->flashMessenger()->addSuccessMessage('Book has been successfully added');         
                 return $this->redirect()->toRoute('books/newbook');                
             } else {
-                $view->form = $form;      
+                $view->form = $form;                
                 return $view;               
             }            
-        }        
-        $submit = $form->get('submit');
-        $submit->setValue('Add book');
+        }
         $view->form = $form;      
         return $view;
     }
@@ -206,7 +216,7 @@ class CollectionController extends AbstractActionController
         $view =  new ViewModel();
         $form = new BookForm($this->em);         
         if ($this->getRequest()->isPost()) {          
-            $id = $request->getPost('id');
+            $id = (int) $this->getRequest()->getPost('id');
             if (!$id) {
             $this->flashMessenger()->addErrorMessage('Id not found in request');
                 return $this->redirect()->toRoute('books/collection');
@@ -223,19 +233,29 @@ class CollectionController extends AbstractActionController
                 $request->getPost()->toArray(),
                 $request->getFiles()->toArray()
             );
-            $form->setData($post);          
+            $form->setData($post);
+            if (!isset($post['photofile']['tmp_name']) || !$post['photofile']['tmp_name']) {
+                $form->remove('photofile');
+                $form->getInputFilter()->remove('photofile');
+
+            }
+            if (!isset($post['bookfile']['tmp_name']) || !$post['bookfile']['tmp_name']) {
+                $form->remove('bookfile');            
+                $form->getInputFilter()->remove('bookfile');
+            }
+
             if ($form->isValid()) {    
                 $data = $form->getData();
-                $data['curphotofile'] = $book->getPhotofile()->getArrayCopy();
-                $data['curbookfile'] = $book->getBookfile()->getArrayCopy();                
+                $data['curphotofile'] = $book->getPhotofile();
+                $data['curbookfile'] = $book->getBookfile();                
                 $form->setObject(new Book());
                 $form->bind($book);
                 $form->bindValues();                
                 $this->collection->editBook($book, $data);                
                 $this->flashMessenger()->addSuccessMessage('Book has been edit');         
-                return $this->redirect()->toRoute('books/newbook');                
+                return $this->redirect()->toRoute('books/collection');                
             } else {
-                $this->flashMessenger()->addErrorMessage('Book with this id not found');
+                $this->flashMessenger()->addErrorMessage('Data is not valid');
                 return $this->redirect()->toRoute('books/editbook', ['id' => $id]);                
             }            
         }        
@@ -249,6 +269,9 @@ class CollectionController extends AbstractActionController
             $this->flashMessenger()->addErrorMessage('Book with this id not found');
             return $this->redirect()->toRoute('books/collection');
         }
+        $form->setObject(new Book());                
+        $form->get('photofile')->setAttribute('required', '');
+        $form->get('bookfile')->setAttribute('required', '');
         $submit = $form->get('submit');
         $submit->setValue('Edit book');
         $form->bind($book);        
@@ -265,7 +288,7 @@ class CollectionController extends AbstractActionController
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
             $post = $this->getRequest()->getPost();
-            $id = $request->getPost('id');            
+            $id = (int) $request->getPost('id');            
             $form = new BookForm($this->em);            
             if (!$id) {                
                 return $response->setContent(Json::encode(['error' => 'Id not found in request']));
@@ -280,11 +303,21 @@ class CollectionController extends AbstractActionController
                 $request->getPost()->toArray(),
                 $request->getFiles()->toArray()
             );
+            $form->setData($post);
+            if (!isset($post['photofile']['tmp_name']) || !$post['photofile']['tmp_name']) {
+                $form->remove('photofile');
+                $form->getInputFilter()->remove('photofile');
+
+            }
+            if (!isset($post['bookfile']['tmp_name']) || !$post['bookfile']['tmp_name']) {
+                $form->remove('bookfile');            
+                $form->getInputFilter()->remove('bookfile');
+            }
             $form->setData($post);          
             if ($form->isValid()) {    
                 $data = $form->getData();
-                $data['curphotofile'] = $book->getPhotofile()->getArrayCopy();
-                $data['curbookfile'] = $book->getBookfile()->getArrayCopy();                
+                $data['curphotofile'] = $book->getPhotofile();
+                $data['curbookfile'] = $book->getBookfile();                
                 $form->setObject(new Book());
                 $form->bind($book);
                 $form->bindValues();                
@@ -314,7 +347,7 @@ class CollectionController extends AbstractActionController
                 $id = (int) $request->getPost('id');
                 $book = $this->collection->getBookById($id);
                 if ($book) {                   
-                    $this->collection->delete($book);                    
+                    $this->collection->deleteBook($book);                    
                     $this->flashMessenger()->addSuccessMessage('Book has been deleted');
                     return $this->redirect()->toRoute('books/collection');                    
                 } else {
@@ -324,12 +357,14 @@ class CollectionController extends AbstractActionController
             }            
             return $this->redirect()->toRoute('books/collection');
         }        
-        $id = (int) $this->params()->fromRoute('id');
+        $id = $this->params()->fromRoute('id');
         if (!$id) {
+            $this->flashMessenger()->addErrorMessage('Id not found in request!');
             return $this->redirect()->toRoute('books/collection');
         }
         $book = $this->collection->getBookById($id);
         if (!$book) {
+            $this->flashMessenger()->addErrorMessage('Error. Book not found!');
             return $this->redirect()->toRoute('books/collection');
         }
         $view =  new ViewModel();

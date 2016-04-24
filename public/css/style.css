@@ -84,4 +84,6 @@ div.container a.brand {
   border: 1px solid #DDD;     
 }
 
-
+.btn {
+  margin-top: 10px;
+}

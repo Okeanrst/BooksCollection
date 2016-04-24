@@ -26,14 +26,14 @@ class BookForm extends Form
         //$this->setHydrator(new ClassMethods());
         $this->setHydrator(new DoctrineHydrator($objectManager));
         //$this->setObject(new Book());
-        
+        $this->setAttribute('enctype','multipart/form-data');
         
         $this->add(array(
             'name' => 'id',
             'type'  => 'hidden',            
-            'attributes' => array(
+            /*'attributes' => array(
                 'required' => 'required',
-            ),
+            ),*/
         ));
         
         $this->add(array(
@@ -46,7 +46,10 @@ class BookForm extends Form
         
         $this->add(array(
             'name' => 'photofile',
-            'type'  => 'file',           
+            'type'  => 'file',
+            'attributes' => array(
+                'required' => 'required',
+            ),           
         ));
         
         $this->add(array(
@@ -62,7 +65,7 @@ class BookForm extends Form
                 'type' => 'DoctrineModule\Form\Element\ObjectSelect',
                 'name' => 'author',
                 'attributes' => array(
-                    'required' => false,
+                    'required' => true,
                     //'value' => true
                 ),
                 'options' => array(
@@ -137,7 +140,7 @@ class BookForm extends Form
 
             $inputFilter->add(array(
                 'name'     => 'id',
-                'required' => true,
+                'required' => false,
                 'filters'  => array(
                     array('name' => 'Int'),
                 ),
@@ -183,7 +186,7 @@ class BookForm extends Form
             
             $inputFilter->add(array(
                 'name'     => 'photofile',
-                'required'   => false,
+                'required'   => true,
                 'filters' => array(
                     array(
                         'name' => 'filerenameupload',
@@ -220,7 +223,7 @@ class BookForm extends Form
             
             $inputFilter->add(array(
                 'name'     => 'bookfile',
-                'required'   => false,
+                'required'   => true,
                 'filters' => array(
                     array(
                         'name' => 'filerenameupload',

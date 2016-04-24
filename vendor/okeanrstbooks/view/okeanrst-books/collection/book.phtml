@@ -1,30 +1,68 @@
-<h1><?php echo $this->translate('Book ').$this->entity->getTitle() ?></h1>
+<h1><?php echo $this->translate('Book "').$this->entity->getTitle().'"' ?></h1>
+<div id="flashMessage" class="hidden"></div>
+<?php if ($this->zfcUserIdentity()):?>
+     <a class="ajaxnew" href="<?php echo $this->url('books/newbook') ?>" >Add new book</a>      
+<?php endif; ?>
 <dl class="zend_form">
-	<dd class="hidden" data-id="<?php echo $this->formHidden($this->entity->getId()) ?>"></dd>    
+	<dd class="hidden" data-id="<?php echo $this->entity->getId() ?>"></dd>    
 	
-    <dt><label for="title"><?php echo $this->translate('Title') ?></label></dt>
-    <dd><?php echo $this->entity->getTitle()) ?></dd>
+    <dt><label for="title"><?php echo $this->translate('Title:') ?></label></dt>
+    <dd><?php echo $this->entity->getTitle() ?></dd>
         
-    <dt><label for="photofile"><?php echo $this->translate('Photo') ?></label></dt>
+    <dt><label for="photofile"><?php echo $this->translate('Photo:') ?></label></dt>
     <dd><img src="<?php echo $this->entity->getPhotofile()->getPath() ?>" alt="Books photo"></dd>
     
     
-    <dt><label for="author"><?php echo $this->translate('Author') ?></label></dt>
+    <dt><label for="author"><?php echo $this->translate('Author:') ?></label></dt>
     <dd><a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $this->entity->getAuthor()->getId())) ?>" >
     	<?php echo $this->entity->getAuthor()->getLastName().' '.$this->entity->getAuthor()->getName() ?></a></dd>
     
     
-    <dt><label for="rubric"><?php echo $this->translate('Rubric') ?></label></dt>
-    <dd><ul><?php foreach ($this->entity->getRubric() as $rubric) ?>
+    <dt><label for="rubric"><?php echo $this->translate('Rubric:') ?></label></dt>
+    <dd><ul><?php foreach ($this->entity->getRubric() as $rubric): ?>
 		<li><a href="<?php echo $this->url('books/getbooksbyrubric', array('id' => $rubric->getId())) ?>" ><?php echo $rubric->getTitle() ?></a></li>
-    <?php endforeach ?></ul></dd>
+    <?php endforeach; ?></ul></dd>
     
     
-    <dt><label for="bookfile"><?php echo $this->translate('File') ?></label></dt>
-    <dd><a href="<?php echo $this->entity->getBookfile()->getPath() ?>">View book</a></dd>    
+    <dt><label for="bookfile"><?php echo $this->translate('File:') ?></label></dt>
+    <dd><a class="ajaxfile" href="<?php echo $this->entity->getBookfile()->getPath() ?>">View book</a></dd>    
     
 </dl>
 <?php if ($this->zfcUserIdentity()): ?>
-	<td><a href="<?php echo $this->url('books/deletebook', array('id' => $this->entity->getId())); ?>"><?php echo $this->translate('Delete book') ?></a></td>
-	<td><a href="<?php echo $this->url('books/editbook', array('id' => $this->entity->getId())); ?>"><?php echo $this->translate('Edit book') ?></a></td>
+	<td><a class="ajaxdel" href="<?php echo $this->url('books/deletebook', array('id' => $this->entity->getId())); ?>"><?php echo $this->translate('Delete book') ?></a></td>
+	<td><a class="ajaxedit" href="<?php echo $this->url('books/editbook', array('id' => $this->entity->getId())); ?>"><?php echo $this->translate('Edit book') ?></a></td>
 <?php endif; ?>
+
+<div id="cover" class="hidden"></div>
+<div id="ajaxpagefile" class="hidden"><embed width="100%" height="100%" name="plugin" id="plugin" src="" type="" internalinstanceid="3" title=""></div>
+<div id="ajaxnew" class="hidden">
+    <?php 
+    $this->bookForm->setAttribute('name', 'newbook');    
+    echo $this->partial('bookform.phtml', ['form' => $this->bookForm]); ?>
+</div>
+<div id="ajaxedit" class="hidden">
+    <?php 
+    $this->bookForm->setAttribute('name', 'editbook');    
+    echo $this->partial('bookform.phtml', ['form' => $this->bookForm]); ?>
+</div>
+<div id="ajaxdelete" class="hidden">   
+    <?php    
+    $title = 'Are you sure that you want to delete book';    
+    echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => 'deletebook' ]);
+    ?>    
+</div>
+
+<script>
+    var reload = true; //reload page after ajax action    
+    var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
+    var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
+    var mess = $('#flashMessage');    
+
+    $(document).ready(function() {               
+        flashMessage(mess, error, success);
+        $('.ajaxnew').click(newAction);
+        $('.ajaxedit').click(editAction);
+        $('.ajaxdel').click(deleteAction);
+        $('.ajaxfile').click(loadPage);
+    });    
+</script>

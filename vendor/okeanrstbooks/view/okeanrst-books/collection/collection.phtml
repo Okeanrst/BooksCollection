@@ -2,7 +2,7 @@
 $title = $this->translate('Books collection');
 $this->headTitle($title);
 ?>
-<h1 class="ajaxfile" ><?php echo $this->escapeHtml($title) ?></h1>
+<h1><?php echo $this->escapeHtml($title) ?></h1>
 <div id="flashMessage" class="hidden"></div>
 <?php if ($this->zfcUserIdentity()):?>
      <a class="ajaxnew" href="<?php echo $this->url('books/newbook') ?>" >Add new book</a>      
