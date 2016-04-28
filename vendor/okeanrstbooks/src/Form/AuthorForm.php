@@ -98,13 +98,7 @@ class AuthorForm extends Form
                             'min'      => 1,
                             'max'      => 64,
                         ),
-                    ),
-                    /*array(
-                        'name'    => 'Regex',
-                        'options' => array(
-                            'pattern' => '/[A-Za-zа-яёА-ЯЁ -]+/',                            
-                        ),
-                    ),*/
+                    ),                    
                 ),
             ));
 
@@ -123,13 +117,7 @@ class AuthorForm extends Form
                             'min'      => 1,
                             'max'      => 64,
                         ),
-                    ),
-                    /*array(
-                        'name'    => 'Regex',
-                        'options' => array(
-                            'pattern' => '/[A-Za-zа-яёА-ЯЁ -]+/',                            
-                        ),
-                    ),*/
+                    ),                    
                 ),
             ));
 
