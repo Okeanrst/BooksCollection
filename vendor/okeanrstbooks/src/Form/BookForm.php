@@ -22,18 +22,13 @@ class BookForm extends Form
     public function __construct(ObjectManager $objectManager)
 	{
         parent::__construct($this->name);
-        $this->objectManager = $objectManager;        
-        //$this->setHydrator(new ClassMethods());
-        $this->setHydrator(new DoctrineHydrator($objectManager));
-        //$this->setObject(new Book());
+        $this->objectManager = $objectManager;
+        $this->setHydrator(new DoctrineHydrator($objectManager));        
         $this->setAttribute('enctype','multipart/form-data');
         
         $this->add(array(
             'name' => 'id',
-            'type'  => 'hidden',            
-            /*'attributes' => array(
-                'required' => 'required',
-            ),*/
+            'type'  => 'hidden',
         ));
         
         $this->add(array(
@@ -65,8 +60,7 @@ class BookForm extends Form
                 'type' => 'DoctrineModule\Form\Element\ObjectSelect',
                 'name' => 'author',
                 'attributes' => array(
-                    'required' => true,
-                    //'value' => true
+                    'required' => true,                    
                 ),
                 'options' => array(
                     'object_manager'     => $this->objectManager,
@@ -87,8 +81,7 @@ class BookForm extends Form
                 'name' => 'rubric',
 				'attributes' => array(
                     'required' => false,
-                    'multiple' => true,
-                    //'value' => true
+                    'multiple' => true,                    
                 ),
                 'options' => array(
                     'object_manager'     => $this->objectManager,
@@ -183,6 +176,14 @@ class BookForm extends Form
                     ),
                 ),
             ));
+
+            $inputFilter->add(array(
+                'name'     => 'rubric',
+                'required' => true,
+                'filters'  => array(
+                    array('name' => 'Int'),
+                ),                
+            ));
             
             $inputFilter->add(array(
                 'name'     => 'photofile',
@@ -241,13 +242,7 @@ class BookForm extends Form
                         'options' => array(
                             'max' => '50MB'
                         )
-                    ),
-                    /*array(
-                        'name' => 'filemimetype',
-                        'options' => array(
-                            'mimeType' => array('image/jpeg', 'image/png', 'image/bmp', 'image/gif')
-                        )
-                    ),*/                    
+                    ),                                        
                 )
             ));
             
