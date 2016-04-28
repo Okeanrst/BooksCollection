@@ -19,38 +19,42 @@ class CollectionController extends AbstractActionController
 {
     protected $collection;
     
-    protected $em;    
+    protected $em;
 
-    public function __construct($collectionService, EntityManager $entityManager)
+    protected $viewHelper;  
+
+    public function __construct($collectionService, EntityManager $entityManager, $viewHelperManager)
     {
         $this->collection = $collectionService;
-        $this->em = $entityManager;        
+        $this->em = $entityManager;
+        $this->viewHelperManager = $viewHelperManager;        
     }    
     
+    public function indexAction()
+    {
+        return $this->redirect()->toRoute('books/collection');
+    }
     
-    //показываем постранично список всех книг, ссылки на просмотр только автора, рубрики. В шаблоне проверяем привиллегии-выводим ссылку для добавления книги.
     public function collectionAction()
     {
-        $books = $this->collection->getAllBooksPaginator((int)$this->params()->fromQuery('page', 1), 10);        
+        $page = $this->params()->fromRoute('page', 1);
+        $itemCount = $this->params()->fromRoute('itemCount', 3);
+        $books = $this->collection->getAllBooksPaginator($page , $itemCount);        
         $bookForm = new BookForm($this->em);
         $bookForm->get('photofile')->setAttribute('required', '');
         $bookForm->get('bookfile')->setAttribute('required', '');
-        if ($books) {
-                        
+        if ($books) {                        
             return new ViewModel(array('collection' => $books, 'bookForm' => $bookForm));
-        } else {
-            //$this->flashMessenger()->addErrorMessage('');
-            //$this->layout()->setTemplate('layout/layout');
-            //return $this->redirect()->toRoute('books');
+        } else {            
             return new ViewModel(['bookForm' => $bookForm]);
         }        
-    }
-    
-    //информация по конкретной книге с возможностью просмотра, при наличии приввилегий ссылки на редактирование-форма с заполненными полями 
+    }    
+     
     public function bookAction()
     {
-        $id = (int) $this->params()->fromRoute('id');
+        $id = $this->params()->fromRoute('id');
         if (!$id) {
+            $this->flashMessenger()->addErrorMessage('Id not found in request');
             return $this->redirect()->toRoute('books/collection');
         }         
         $book = $this->collection->getBookById($id);
@@ -63,6 +67,7 @@ class CollectionController extends AbstractActionController
             $view->entity = $book;        
             return $view;
         }
+        $this->flashMessenger()->addErrorMessage('Rubric with this id not found');
         return $this->redirect()->toRoute('books/collection'); 
     }    
     
@@ -70,13 +75,18 @@ class CollectionController extends AbstractActionController
     {
         $id = (int) $this->params()->fromRoute('id');
         if (!$id) {
-            return $this->redirect()->toRoute('books/collection');
+            $this->flashMessenger()->addErrorMessage('Id not found in request');
+            return $this->redirect()->toRoute('books/authors');
         }
         $author = $this->collection->getAuthorById($id);
+        if (!$author) {
+            $this->flashMessenger()->addErrorMessage('Author with this id not found');
+            return $this->redirect()->toRoute('books/authors');
+        }
         $page = $this->params()->fromRoute('page');
         $page = $page ? $page: 1;
         $itemCount = $this->params()->fromRoute('itemCount');
-        $itemCount = $itemCount ? $itemCount : 10;
+        $itemCount = $itemCount ? $itemCount : 5;
         $result = $this->collection->getBooksByAuthorPaginator($id, $page, $itemCount);
         if ($result) {
             $bookForm = new BookForm($this->em);
@@ -88,20 +98,25 @@ class CollectionController extends AbstractActionController
             $view->bookForm = $bookForm;       
             return $view;
         }
-        return $this->redirect()->toRoute('books/collection');
+        return $this->redirect()->toRoute('books/authors');
     }
 
     public function getBooksByRubricAction()
     {
-        $id = (int) $this->params()->fromRoute('id');
+        $id = $this->params()->fromRoute('id');
         if (!$id) {
-            return $this->redirect()->toRoute('books/collection');
+            $this->flashMessenger()->addErrorMessage('Id not found in request');
+            return $this->redirect()->toRoute('books/rubrics');
         }
         $rubric = $this->collection->getRubricById($id);
+        if (!$rubric) {
+            $this->flashMessenger()->addErrorMessage('Rubric with this id not found');
+            return $this->redirect()->toRoute('books/rubrics');
+        }
         $page = $this->params()->fromRoute('page');
         $page = $page ? $page: 1;
         $itemCount = $this->params()->fromRoute('itemCount');
-        $itemCount = $itemCount ? $itemCount : 10;
+        $itemCount = $itemCount ? $itemCount : 5;
         $result = $this->collection->getBooksByRubricPaginator($id, $page, $itemCount);
         if ($result) {
             $bookForm = new BookForm($this->em);
@@ -113,15 +128,17 @@ class CollectionController extends AbstractActionController
             $view->bookForm = $bookForm;        
             return $view;
         }
-        return $this->redirect()->toRoute('books/collection');
+        $view =  new ViewModel();
+        $bookForm = new BookForm($this->em);
+        $view->rubric = $rubric;
+        $view->bookForm = $bookForm;
+        return $view;        
     }
     
     public function authorsAction()
     {
-        $page = $this->params()->fromRoute('page');
-        $page = $page ? $page: 1;
-        $itemCount = $this->params()->fromRoute('itemCount');
-        $itemCount = $itemCount ? $itemCount : 10;
+        $page = $this->params()->fromRoute('page', 1);        
+        $itemCount = $this->params()->fromRoute('itemCount', 10);        
         $result = $this->collection->getAllAuthorsPaginator($page, $itemCount);
         $view =  new ViewModel();
         if ($result) {                        
@@ -133,10 +150,8 @@ class CollectionController extends AbstractActionController
 
     public function rubricsAction()
     {
-        $page = $this->params()->fromRoute('page');
-        $page = $page ? $page: 1;
-        $itemCount = $this->params()->fromRoute('itemCount');
-        $itemCount = $itemCount ? $itemCount : 10;
+        $page = $this->params()->fromRoute('page', 1);        
+        $itemCount = $this->params()->fromRoute('itemCount', 10);        
         $result = $this->collection->getAllRubricsPaginator($page, $itemCount);
         $view =  new ViewModel();
         if ($result) {            
@@ -154,8 +169,7 @@ class CollectionController extends AbstractActionController
         $submit = $form->get('submit');
         $submit->setValue('Add book');         
         if ($this->getRequest()->isPost()) {             
-            $book = new Book();
-            //$form->bind($book);
+            $book = new Book();            
             $form->setBindOnValidate(FormInterface::BIND_MANUAL);            
             $request = $this->getRequest();
             $post = array_merge_recursive(
@@ -165,9 +179,6 @@ class CollectionController extends AbstractActionController
             $form->setData($post);          
             if ($form->isValid()) {    
                 $data = $form->getData();
-                $form->setObject(new Book());
-                $form->bind($book);
-                $form->bindValues();                
                 $this->collection->addBook($book, $data);                
                 $this->flashMessenger()->addSuccessMessage('Book has been successfully added');         
                 return $this->redirect()->toRoute('books/newbook');                
@@ -189,8 +200,7 @@ class CollectionController extends AbstractActionController
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
             $form = new BookForm($this->em);
-            $book = new Book();               
-            //$form->bind($book);
+            $book = new Book(); 
             $form->setBindOnValidate(FormInterface::BIND_MANUAL);
             $post = array_merge_recursive(
                 $request->getPost()->toArray(),
@@ -198,12 +208,10 @@ class CollectionController extends AbstractActionController
             );
             $form->setData($post);
             if ($form->isValid()) {    
-                $data = $form->getData();
-                $form->setObject(new Book());
-                $form->bind($book);
-                $form->bindValues();                
+                $data = $form->getData();                           
                 $this->collection->addBook($book, $data);                
-                return $response->setContent(Json::encode(array('success' => 'Author has been edded')));                                              
+                $data = $this->prepareBookLine($book);
+                return $response->setContent(Json::encode(['success' => 'Author has been edded', 'data' => $data]));                                              
             }
             return $response->setContent(Json::encode(['error' => 'Data is not valid']));                                
         }        
@@ -225,8 +233,7 @@ class CollectionController extends AbstractActionController
             if (!$book) {
                 $this->flashMessenger()->addErrorMessage('Book with this id not found');
                 return $this->redirect()->toRoute('books/collection');
-            }
-            //$form->bind($book);
+            }            
             $form->setBindOnValidate(FormInterface::BIND_MANUAL);            
             $request = $this->getRequest();
             $post = array_merge_recursive(
@@ -245,12 +252,7 @@ class CollectionController extends AbstractActionController
             }
 
             if ($form->isValid()) {    
-                $data = $form->getData();
-                $data['curphotofile'] = $book->getPhotofile();
-                $data['curbookfile'] = $book->getBookfile();                
-                $form->setObject(new Book());
-                $form->bind($book);
-                $form->bindValues();                
+                $data = $form->getData();                
                 $this->collection->editBook($book, $data);                
                 $this->flashMessenger()->addSuccessMessage('Book has been edit');         
                 return $this->redirect()->toRoute('books/collection');                
@@ -315,14 +317,13 @@ class CollectionController extends AbstractActionController
             }
             $form->setData($post);          
             if ($form->isValid()) {    
-                $data = $form->getData();
-                $data['curphotofile'] = $book->getPhotofile();
-                $data['curbookfile'] = $book->getBookfile();                
-                $form->setObject(new Book());
-                $form->bind($book);
-                $form->bindValues();                
-                $this->collection->editBook($book, $data);                
-                return $response->setContent(Json::encode(array('success' => 'Book has been editing')));
+                $data = $form->getData();                
+                //$form->setObject(new Book());
+                //$form->bind($book);
+                //$form->bindValues();                
+                $this->collection->editBook($book, $data);
+                $data = $this->prepareBookLine($book);               
+                return $response->setContent(Json::encode(['success' => 'Book has been editing', 'data' => $data]));
             } else {
                 $form->bind($book);
                 $formData = ['id' => $form->get('id')->getValue(),
@@ -437,8 +438,9 @@ class CollectionController extends AbstractActionController
             $form->bind($author);
             $form->setData($post);          
             if ($form->isValid()) {
-                $this->collection->save($author);                                       
-                return $response->setContent(Json::encode(array('success' => 'Author has been edded')));
+                $this->collection->save($author);
+                $data = $this->prepareAuthorLine($author);                                      
+                return $response->setContent(Json::encode(['success' => 'Author has been edded', 'data' => $data]));
             } else {                    
                 $formData = [
                     'lastName' => $form->get('lastName')->getValue(),
@@ -453,23 +455,20 @@ class CollectionController extends AbstractActionController
     public function editAuthorAction()
     {
         $this->checkAccess();
-        $id = (int) $this->params()->fromRoute('id');
+        $view =  new ViewModel();
         $form = new AuthorForm($this->em);
-        if ($id) {
-            $author = $this->collection->getAuthorById($id);
-            if (!$author) {
+        if ($this->getRequest()->isPost()) {
+            $id = (int) $this->getRequest()->getPost('id');
+            if (!$id) {
+            $this->flashMessenger()->addErrorMessage('Id not found in request');
                 return $this->redirect()->toRoute('books/authors');
             }
-            $form->bind($author);
-            $view =  new ViewModel();
-            $view->form = $form;        
-            return $view;
-        }       
-        
-        if ($this->getRequest()->isPost()) {
-            $post = $this->getRequest()->getPost();
-            $id = (int) $post->get('id');            
             $author = $this->collection->getAuthorById($id);
+            if (!$author) {
+                $this->flashMessenger()->addErrorMessage('Author with this id not found');
+                return $this->redirect()->toRoute('books/authors');
+            }
+            $post = $this->getRequest()->getPost();
             $form->bind($author);
             $form->setData($post);          
             if ($form->isValid()) {
@@ -477,10 +476,25 @@ class CollectionController extends AbstractActionController
                 $this->flashMessenger()->addSuccessMessage('Athor has been successfully editing');                   
                 return $this->redirect()->toRoute('books/authors');                
             } else {
-                $this->flashMessenger()->addErrorMessage('Error editing author. Data is not valid');                
+                $this->flashMessenger()->addErrorMessage('Error editing author. Data is not valid');
+                return $this->redirect()->toRoute('books/editauthor', ['id' => $id]);                
             }
         }
-        return $this->redirect()->toRoute('books/authors');
+        $id = $this->params()->fromRoute('id');
+        if (!$id) {
+            $this->flashMessenger()->addErrorMessage('Id not found in request');
+            return $this->redirect()->toRoute('books/authors');
+        }
+        $author = $this->collection->getAuthorById($id);
+        if (!$author) {
+            $this->flashMessenger()->addErrorMessage('Book with this id not found');
+            return $this->redirect()->toRoute('books/authors');
+        }        
+        $form->bind($author);
+        $submit = $form->get('submit');
+        $submit->setValue('Edit author');                
+        $view->form = $form;      
+        return $view;
     }
 
     public function ajaxEditAuthorAction()
@@ -502,8 +516,9 @@ class CollectionController extends AbstractActionController
                 $form->bind($author);
                 $form->setData($post);          
                 if ($form->isValid()) {
-                    $this->collection->save($author);                                       
-                    return $response->setContent(Json::encode(array('success' => 'Author has been editing')));
+                    $this->collection->save($author);
+                    $data = $this->prepareAuthorLine($author);                                       
+                    return $response->setContent(Json::encode(['success' => 'Author has been editing', 'data' => $data]));
                 } else {                    
                     $formData = ['id' => $form->get('id')->getValue(),
                         'lastName' => $form->get('lastName')->getValue(),
@@ -541,12 +556,14 @@ class CollectionController extends AbstractActionController
             
             return $this->redirect()->toRoute('books/authors');
         }        
-        $id = (int) $this->params()->fromRoute('id');
+        $id = $this->params()->fromRoute('id');
         if (!$id) {
+            $this->flashMessenger()->addErrorMessage('Id not found in request!');
             return $this->redirect()->toRoute('books/authors');
         }
         $author = $this->collection->getAuthorById($id);
         if (!$author) {
+            $this->flashMessenger()->addErrorMessage('Error. Athor not found!');
             return $this->redirect()->toRoute('books/authors');
         }
         $view =  new ViewModel();
@@ -620,7 +637,8 @@ class CollectionController extends AbstractActionController
             $form->setData($post);          
             if ($form->isValid()) {
                 $this->collection->save($rubric);                                       
-                return $response->setContent(Json::encode(array('success' => 'Rubric has been added')));
+                $data = $this->prepareRubricLine($rubric);
+                return $response->setContent(Json::encode(['success' => 'Rubric has been added', 'data' => $data]));
             } else {                    
                 $formData = [
                     'Title' => $form->get('title')->getValue()
@@ -688,8 +706,9 @@ class CollectionController extends AbstractActionController
                 $form->bind($rubric);
                 $form->setData($post);          
                 if ($form->isValid()) {
-                    $this->collection->save($rubric);                                       
-                    return $response->setContent(Json::encode(array('success' => 'Rubric has been editing')));
+                    $this->collection->save($rubric);
+                    $data = $this->prepareRubricLine($rubric);                                      
+                    return $response->setContent(Json::encode(['success' => 'Rubric has been editing', 'data' => $data]));
                 } else {                    
                     $formData = ['id' => $form->get('id')->getValue(),
                         'title' => $form->get('title')->getValue()                        
@@ -714,7 +733,7 @@ class CollectionController extends AbstractActionController
                 $id = (int) $request->getPost('id');
                 $rubric = $this->collection->getRubricById($id);
                 if ($rubric) {                   
-                    $this->collection->delete($rubric);                    
+                    $this->collection->deleteRubric($rubric);                    
                     $this->flashMessenger()->addSuccessMessage('Rubric has been deleted');
                     return $this->redirect()->toRoute('books/rubrics');                    
                 } else {
@@ -752,7 +771,7 @@ class CollectionController extends AbstractActionController
             }
             $rubric = $this->collection->getRubricById($id);
             if ($rubric) {                   
-                $this->collection->delete($rubric);                                        
+                $this->collection->deleteRubric($rubric);                                        
                 return $response->setContent(Json::encode(array('success' => 'Rubric has been deleted')));
             } else {
                 return $response->setContent(Json::encode(array('error' => 'Rubric not found')));
@@ -776,4 +795,47 @@ class CollectionController extends AbstractActionController
         }
         return true;
     }
-}
+
+    private function prepareBookLine($book)
+    {
+        $urlHelper = $this->viewHelperManager->get('url');
+        $data = [];
+        $data['id'] = $book->getId();
+        $data['title'] = ['href' => $urlHelper('books/book', ['id' => $book->getId()]), 'title' => $book->getTitle()];        
+        $author = $book->getAuthor()->getLastName().' '.$book->getAuthor()->getName();
+        $data['author'] = ['href' => $urlHelper('books/getbooksbyauthor', ['id' => $book->getId()]), 'value' => $author];
+        $rubric = [];
+        foreach ($book->getRubric() as $rub) {
+            array_push($rubric, ['href' => $urlHelper('books/rubrics', ['id' => $rub->getId()]), 'value' => $rub->getTitle().', ']);
+        }
+        $data['rubric'] = $rubric;
+        $data['img'] = $book->getPhotofile()->getPath();
+        $data['view'] = ['href' => $book->getBookfile()->getPath(), 'type' => $book->getBookfile()->getMimeType()];
+        $data['edit'] = $urlHelper('books/editbook', ['id' => $book->getId()]);
+        $data['del'] = $urlHelper('books/deletebook', ['id' => $book->getId()]);
+        return $data;
+    }
+
+    private function prepareAuthorLine($author)
+    {
+        $data = [];
+        $data['id'] = $author->getId();
+        $urlHelper = $this->viewHelperManager->get('url');        
+        $data['author'] = ['href' => $urlHelper('books/getbooksbyauthor', ['id' => $author->getId()]), 'value' => $author->getLastName()];
+        $data['name'] = $author->getName();
+        $data['edit'] = $urlHelper('books/editauthor', ['id' => $author->getId()]);
+        $data['del'] = $urlHelper('books/deleteauthor', ['id' => $author->getId()]);
+        return $data;
+    }
+
+    private function prepareRubricLine($rubric)
+    {
+        $data = [];
+        $data['id'] = $rubric->getId();
+        $urlHelper = $this->viewHelperManager->get('url');        
+        $data['rubric'] = ['href' => $urlHelper('books/getbooksbyrubric', ['id' => $rubric->getId()]), 'value' => $rubric->getTitle()];        
+        $data['edit'] = $urlHelper('books/editrubric', ['id' => $rubric->getId()]);
+        $data['del'] = $urlHelper('books/deleterubric', ['id' => $rubric->getId()]);
+        return $data;
+    }
+}   
