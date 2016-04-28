@@ -12,27 +12,34 @@ $this->headTitle($title);
     <tr>
         <th><?php echo $this->translate('№') ?></th>
         <th><?php echo $this->translate('Title') ?></th>
-        <th><?php echo $this->translate('Action') ?></th>                      
+        <?php if ($this->zfcUserIdentity()):?>
+            <th><?php echo $this->translate('Edit') ?></th>
+            <th><?php echo $this->translate('Delete') ?></th>
+        <?php endif; ?>
     </tr>
     <?php $i = 1;
     if (count($this->collection) > 0): ?>
         <?php foreach ($this->collection as $rubric): ?>
-            <tr data-id="<?php echo $rubric->getId()?>">
-                <td><?php echo $i++;?></td>
-                <td><a href="<?php echo $this->url('books/getbooksbyrubric', array('id' => $rubric->getId())) ?>" >
+            <tr>
+                <td name="num"><?php echo $i++;?></td>
+                <td name="rubric"><a href="<?php echo $this->url('books/getbooksbyrubric', array('id' => $rubric->getId())) ?>" >
                     <?php echo $rubric->getTitle() ?></a>
                 </td>
                 <?php if ($this->zfcUserIdentity()):?>
-                    <td>
-                    <a class="ajaxedit" href="<?php echo $this->url('books/editrubric', array('id' => $rubric->getId())) ?>" >edit</a>
+                    <td name="edit">
+                    <a class="ajaxedit" data-id="<?php echo $rubric->getId()?>" href="<?php echo $this->url('books/editrubric', array('id' => $rubric->getId())) ?>" >edit</a>
                     </td>
-                    <td>
-                    <a class="ajaxdel" href="<?php echo $this->url('books/deleterubric', array('id' => $rubric->getId())) ?>" >delete</a>
+                    <td name="delete">
+                    <a class="ajaxdel" data-id="<?php echo $rubric->getId()?>" href="<?php echo $this->url('books/deleterubric', array('id' => $rubric->getId())) ?>" >delete</a>
                     </td>
                 <?php endif; ?>
             </tr>
         <?php endforeach ?>
     <?php endif ?>
+    <tr id="line" class="hidden">
+        <td name="num"></td><td name="rubric"><a href=""></a></td><td name="edit"><a data-id="" class="ajaxedit" href="" >edit</a></td>
+        <td name="delete"><a class="ajaxdel" href="" >delete</a></td>                    
+    </tr>
 </table>
 
 <?php if ($this->collection) {
@@ -52,21 +59,17 @@ $this->headTitle($title);
 </div>
 <div id="ajaxdelete" class="hidden">   
     <?php    
-    $title = 'Are you sure that you want to delete rubric';    
+    $title = 'Are you sure that you want to delete rubric?';    
     echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => 'deleterubric' ]);
     ?>    
 </div>
 
-<script>
-    //var curUrl = '<?php //echo $this->url() ?>';    
-    var reload = true; //reload page after action
-    //var url = '<?php //echo $this->url('books/ajaxdeleterubric') ?>';
-    //var formName = '<?php //echo $formName ?>';
+<script>       
+    var reload = false; //reload page after action
+    
     var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
     var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
-    var mess = $('#flashMessage');
-
-    
+    var mess = $('#flashMessage');    
 
     $(document).ready(function() {               
         flashMessage(mess, error, success);
@@ -74,6 +77,5 @@ $this->headTitle($title);
         $('.ajaxedit').click(editAction);
         $('.ajaxdel').click(deleteAction);
     });
-
     
 </script>
