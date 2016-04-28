@@ -79,11 +79,13 @@ div.container a.brand {
   width: 80%;
   height: 90%;
   display: table-cell;
-  text-align: center;
+  text-align: left;
   background-color: #FFFFFF;
-  border: 1px solid #DDD;     
+  border: 1px solid #DDD;
+  padding: 15px;     
 }
 
 .btn {
   margin-top: 10px;
 }
+
