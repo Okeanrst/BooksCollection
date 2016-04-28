@@ -10,14 +10,14 @@ class CollectionService
     protected $mapper;
 
     protected $imageService;
+
+    protected $config;  
     
-    protected $config;
-    
-    public function __construct($collectionMapper, $imageService)
+    public function __construct($collectionMapper, $imageService, array $config)
     {
         $this->mapper = $collectionMapper;
         $this->imageService = $imageService;
-        $this->config = $config;
+        $this->config = $config; 
     }
     
     public function getAllBooks()
@@ -25,7 +25,7 @@ class CollectionService
         return $this->mapper->getAllBooks();
     }
     
-    public function getAllBooksPaginator($page, $itemCount)
+    public function getAllBooksPaginator($page = 1, $itemCount = 5)
     {
         $result = $this->getAllBooks();
         if ($result) {
@@ -39,7 +39,7 @@ class CollectionService
         return $this->mapper->getBooksByRubric($id);
     }
     
-    public function getBooksByRubricPaginator($id, $page, $itemCount)
+    public function getBooksByRubricPaginator($id, $page = 1, $itemCount = 5)
     {
         $result = $this->getBooksByRubric($id);
         if ($result) {
@@ -48,7 +48,7 @@ class CollectionService
         return false;
     }
     
-    public function getAllAuthorsPaginator($page, $itemCount)
+    public function getAllAuthorsPaginator($page = 1, $itemCount = 10)
     {
         $result = $this->mapper->getAllAuthors();
         if ($result) {
@@ -57,7 +57,7 @@ class CollectionService
         return false;
     }
 
-    public function getAllRubricsPaginator($page, $itemCount)
+    public function getAllRubricsPaginator($page = 1, $itemCount = 10)
     {
         $result = $this->mapper->getAllRubrics();
         if ($result) {
@@ -71,7 +71,7 @@ class CollectionService
         return $this->mapper->getBooksByAuthor((int) $id);
     }
     
-    public function getBooksByAuthorPaginator($id, $page, $itemCount)
+    public function getBooksByAuthorPaginator($id, $page = 1, $itemCount = 5)
     {
         $result = $this->getBooksByAuthor($id);
         if ($result) {
@@ -85,7 +85,7 @@ class CollectionService
         return $this->mapper->getBooksByAuthorAndRubric((int) $author_id, (int) $rubric_id);
     }
     
-    public function getBooksByAuthorAndRubricPaginator($author_id, $rubric_id, $page, $itemCount)
+    public function getBooksByAuthorAndRubricPaginator($author_id, $rubric_id, $page = 1, $itemCount = 5)
     {
         $result = $this->getBooksByAuthorAndRubric($author_id, $rubric_id);
         if ($result) {            
@@ -96,8 +96,10 @@ class CollectionService
     
     public function addBook(\OkeanrstBooks\Entity\Book $book, $data)
     {        
+        $this->hydrateBook($book, $data);       
+        
         $photofile = new \OkeanrstBooks\Entity\Filephoto();
-        $bookfile = new \OkeanrstBooks\Entity\Filebook();           
+        $bookfile = new \OkeanrstBooks\Entity\Filebook();                   
 
         $pathPhoto = str_replace('\\', '/', $data['photofile']['tmp_name']);
         $pathBook = str_replace('\\', '/', $data['bookfile']['tmp_name']);
@@ -117,8 +119,8 @@ class CollectionService
         $height = $this->config['bookfoto']['size']['height'];
         $this->imageService->makePreview($pathPhoto, $width, $height);
 
-        $pathPhoto = substr($pathPhoto, stripos($pathPhoto, 'public') + 7);
-        $pathBook = substr($pathBook, stripos($pathBook, 'public') + 7);
+        $pathPhoto = substr($pathPhoto, stripos($pathPhoto, 'public') + 6);
+        $pathBook = substr($pathBook, stripos($pathBook, 'public') + 6);
 
         $photofile->setPath($pathPhoto);
         $bookfile->setPath($pathBook);        
@@ -140,24 +142,25 @@ class CollectionService
 
     public function editBook(\OkeanrstBooks\Entity\Book $book, $data)
     {       
-        
+        $data['curphotofile'] = $book->getPhotofile();
+        $data['curbookfile'] = $book->getBookfile();
+        $this->hydrateBook($book, $data);
+
         if (isset($data['photofile']) && $data['photofile']['tmp_name']) {            
             $photofile = new \OkeanrstBooks\Entity\Filephoto();
             $pathPhoto = str_replace('\\', '/', $data['photofile']['tmp_name']);
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $photoType = finfo_file($finfo, $pathPhoto);
             finfo_close($finfo);
-            $width = $this->config['bookfoto']['size']['width'];
-            $height = $this->config['bookfoto']['size']['height'];
-            $this->imageService->makePreview($pathPhoto, $width, $height);
+            $this->imageService->makePreview($pathPhoto, 80, 80);
             $pathPhoto = substr($pathPhoto, stripos($pathPhoto, 'public') + 6);
             $namePhoto = substr($pathPhoto, strripos($pathPhoto, '/')+1);
             $photofile->setPath($pathPhoto);
             $photofile->setName($namePhoto);
             $photofile->setSize($data['photofile']['size']);
             $photofile->setMimeType($photoType);
-            $curPathPhoto = './public/'.$data['curphotofile']->getPath();
-            unlink($curPathPhoto);
+            $curPathPhoto = './public'.$data['curphotofile']->getPath();
+            @unlink($curPathPhoto);
         } else {
             $photofile = $data['curphotofile'];
         }
@@ -175,8 +178,8 @@ class CollectionService
             $bookfile->setName($nameBook);
             $bookfile->setSize($data['bookfile']['size']);
             $bookfile->setMimeType($bookType);
-            $curPathBook = './public/'.$data['curbookfile']->getPath();
-            unlink($curPathBook);
+            $curPathBook = './public'.$data['curbookfile']->getPath();
+            @unlink($curPathBook);
         } else {
             $bookfile = $data['curbookfile'];
         }
@@ -191,13 +194,23 @@ class CollectionService
     {
         $photoPath = $book->getPhotofile()->getPath();
         if ($photoPath) {
-            unlink('./public/'.$photoPath);
+            @unlink('./public'.$photoPath);
         }
         $bookPath = $book->getBookfile()->getPath();
         if ($bookPath) {
-            unlink('./public/'.$bookPath);
+            @unlink('./public'.$bookPath);
         }
-        $this->mapper->save($book);
+        $this->mapper->delete($book);
+    }
+
+    public function deleteRubric(\OkeanrstBooks\Entity\Rubric $rubric)
+    {
+        $rubricId = $rubric->getId();
+        $books = $this->mapper->getBooksByRubric($rubricId);
+        foreach ($books as $book) {
+            $book->removeRubric($rubric);
+        }
+        $this->mapper->delete($rubric);
     }
     
     public function addAuthor(\OkeanrstBooks\Entity\Author $entity)
@@ -221,6 +234,40 @@ class CollectionService
         $paginator->setCurrentPageNumber($page);
         $paginator->setItemCountPerPage($itemCount);
         return $paginator;
+    }
+
+    private function hydrateBook(\OkeanrstBooks\Entity\Book $book, array $data)
+    {
+        $curRubricsId = [];
+        $newRubricsId = [];
+        foreach ($book->getRubric() as $curRubric) {
+            array_push($curRubricsId, $curRubric->getId());
+        }
+
+        foreach($data['rubric'] as $key => $rubricId) {            
+            $rubricId = (int) $rubricId;
+            array_push($newRubricsId, $rubricId); 
+            if (!in_array ($rubricId, $curRubricsId, true) ) {
+                $rubric = $this->getRubricById($rubricId);
+                if (is_a($rubric, 'OkeanrstBooks\Entity\Rubric')) {
+                    $book->addRubric($rubric);
+                } 
+            }                   
+        }
+
+        foreach ($book->getRubric() as $curRubric) {
+            $curRubricId = $curRubric->getId();
+            if (!in_array ($curRubricId, $newRubricsId, true)) {
+                $book->removeRubric($curRubric);
+            }
+        }        
+
+        $author = $this->getAuthorById((int) $data['author']);        
+        if (is_a($author, 'OkeanrstBooks\Entity\Author')) {
+            $book->setAuthor($author);
+        }
+        
+        $book->setTitle($data['title']);
     }
 
 }
