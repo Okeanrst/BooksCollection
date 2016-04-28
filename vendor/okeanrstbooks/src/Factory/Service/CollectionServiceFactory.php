@@ -15,7 +15,8 @@ class CollectionServiceFactory  implements FactoryInterface
     {
         $mapper = $container->get(CollectionMapper::class);
         $imageService = $container->get(ImageService::class);
-        return new CollectionService($mapper, $imageService);
+        $config = $container->get('config')['frontend'];
+        return new CollectionService($mapper, $imageService, $config);
     }
     
     public function createService(ServiceLocatorInterface $container)
