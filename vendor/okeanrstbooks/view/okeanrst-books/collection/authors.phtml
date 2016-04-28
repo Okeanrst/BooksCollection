@@ -1,0 +1,82 @@
+<?php 
+$title = $this->translate('Authors');
+$this->headTitle($title);
+?>
+<h1><?php echo $this->escapeHtml($title) ?></h1>
+<div id="flashMessage" class="hidden"></div>
+<?php if ($this->zfcUserIdentity()):?>
+     <a class="ajaxnew" href="<?php echo $this->url('books/newauthor') ?>" >Add new author</a>      
+<?php endif; ?>
+
+<table class="table">
+    <tr>
+        <th><?php echo $this->translate('№') ?></th>
+        <th><?php echo $this->translate('LastName') ?></th>
+        <th><?php echo $this->translate('Name') ?></th>
+        <?php if ($this->zfcUserIdentity()):?>
+            <th><?php echo $this->translate('Edit') ?></th>
+            <th><?php echo $this->translate('Delete') ?></th>
+        <?php endif; ?>              
+    </tr>
+    <?php $i = 1;
+    if (count($this->collection) > 0): ?>
+        <?php foreach ($this->collection as $author): ?>
+            <tr>
+                <td name="num"><?php echo $i++;?></td>
+                <td name="author"><a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $author->getId())) ?>" >
+                    <?php echo $author->getLastName() ?></a>
+                </td>
+                <td name="name"><?php echo $author->getName() ?></td>
+                <?php if ($this->zfcUserIdentity()):?>
+                    <td name="edit">
+                    <a data-id="<?php echo $author->getId()?>" class="ajaxedit" href="<?php echo $this->url('books/editauthor', array('id' => $author->getId())) ?>" >edit</a>
+                    </td>
+                    <td name="delete">
+                    <a  data-id="<?php echo $author->getId()?>" class="ajaxdel" href="<?php echo $this->url('books/deleteauthor', array('id' => $author->getId())) ?>" >delete</a>
+                    </td>
+                <?php endif; ?>
+            </tr>
+        <?php endforeach ?>
+    <?php endif ?>
+    <tr id="line" class="hidden" >
+        <td name="num"></td>
+        <td name="author"><a href="" ></a></td><td name="name"></td><td name="edit"><a data-id="" class="ajaxedit" href="" >edit</a></td>
+        <td name="delete"><a data-id="" class="ajaxdel" href="">delete</a></td>                
+    </tr>
+</table>
+
+<?php if ($this->collection) {
+    echo $this->paginationControl($this->collection, 'sliding', 'partial/paginator', array());
+} ?>
+<div id="cover" class="hidden"></div>
+<div id="ajaxnew" class="hidden">
+    <?php 
+    $this->authorForm->setAttribute('name', 'newauthor');    
+    echo $this->partial('authorform.phtml', ['form' => $this->authorForm]); ?>
+</div>
+<div id="ajaxedit" class="hidden">
+    <?php 
+    $this->authorForm->setAttribute('name', 'editauthor');    
+    echo $this->partial('authorform.phtml', ['form' => $this->authorForm]); ?>
+</div>
+<div id="ajaxdelete" class="hidden">   
+    <?php    
+    $title = 'Are you sure that you want to delete author?';    
+    echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => 'deleteauthor' ]);
+    ?>    
+</div>
+
+<script>       
+    var reload = false; //reload page after action    
+    var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
+    var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
+    var mess = $('#flashMessage');    
+
+    $(document).ready(function() {               
+        flashMessage(mess, error, success);
+        $('.ajaxnew').click(newAction);
+        $('.ajaxedit').click(editAction);
+        $('.ajaxdel').click(deleteAction);
+    });
+    
+</script>

@@ -1,0 +1,27 @@
+<?php 
+$title = $this->translate('Add book');
+$this->headTitle($title);
+?>
+<h1><?php echo $this->escapeHtml($title) ?></h1>
+<div id="flashMessage" class="hidden"></div>
+
+<?php
+$this->form->setAttribute('action', $this->url('books/newbook'));
+$this->form->setAttribute('method', 'post');
+echo $this->partial('bookform.phtml', array('form' => $this->form,));
+?>
+
+
+<script>
+    $(document).ready(function() {
+               
+        var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
+        var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
+        var mess = $('#flashMessage');
+
+        $(document).ready(function() {               
+            flashMessage(mess, error, success);        
+        });       
+
+    });
+</script>

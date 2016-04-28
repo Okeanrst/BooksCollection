@@ -1,0 +1,51 @@
+<table class="table">
+    <tr>
+        <th><?php echo $this->translate('№') ?></th>
+        <th><?php echo $this->translate('Title') ?></th>
+        <th><a href="<?php echo $this->url('books/authors') ?>" ><?php echo $this->translate('Author') ?></a></th>
+        <th><a href="<?php echo $this->url('books/rubrics') ?>" ><?php echo $this->translate('Rubric') ?></a></th>
+        <th><?php echo $this->translate('Photo') ?></th>
+        <th><?php echo $this->translate('File') ?></th>
+        <?php if ($this->zfcUserIdentity()):?>
+        <th><?php echo $this->translate('Edit') ?></th>
+        <th><?php echo $this->translate('Delete') ?></th>
+        <?php endif; ?>       
+    </tr>
+    <?php $i = 1;
+    if (count($this->collection) > 0): ?>
+        <?php foreach ($this->collection as $book): ?>            
+            <tr>
+                <td name="num"><?php echo $i++;?></td>
+                <td name="title"><a data-id="<?php echo $book->getId()?>" href="<?php echo $this->url('books/book', array('id' => $book->getId())) ?>" ><?php echo $book->getTitle(); ?></a></td>
+                <td name="author"><a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $book->getAuthor()->getId())) ?>" >
+                    <?php echo $book->getAuthor()->getLastName().' '.$book->getAuthor()->getName() ?></a></td>
+                <td name="rubric">   
+                    
+                    <?php //var_dump($book->getRubric()) ?>
+                    <?php foreach ($book->getRubric() as $rubric): ?>
+                    
+                    <a href="<?php echo $this->url('books/getbooksbyrubric', array('id' => $rubric->getId())) ?>" ><?php echo $rubric->getTitle() ?></a>,
+                    <?php endforeach; ?>           
+
+
+                    
+                </td>
+                <td name="img"><img src="<?php echo $book->getPhotofile()->getPath() ?>" alt="Books photo"></td>
+                <td name="view"><a data-id="<?php echo $book->getId()?>" class="ajaxfile" data-type="<?php echo $book->getBookfile()->getMimeType() ?>" href="<?php echo $book->getBookfile()->getPath() ?>">view book</a></td>
+                <?php if ($this->zfcUserIdentity()):?>
+                <td name="edit">
+                    <a data-id="<?php echo $book->getId()?>" class="ajaxedit" href="<?php echo $this->url('books/editbook', array('id' => $book->getId())) ?>" >edit</a>
+                </td>
+                <td name="delete">
+                    <a data-id="<?php echo $book->getId()?>" class="ajaxdel" href="<?php echo $this->url('books/deletebook', array('id' => $book->getId())) ?>" >delete</a>
+                </td>
+                <?php endif; ?>
+            </tr>
+        <?php endforeach ?>        
+    <?php endif; ?>
+    <tr id="line" class="hidden">
+        <td name="num"></td><td name="title"><a> data-id="" href=""</a></td><td name="author"><a href=""></a></td><td name="rubric"></td>
+        <td name="img"><img src="" alt="Books photo"></td><td name="view"><a data-id="" class="ajaxfile" data-type="" href="">view book</a></td>
+        <td name="edit"><a class="ajaxedit" href="" >edit</a></td><td name="delete"><a data-id="" class="ajaxdel" href="">delete</a></td>
+    </tr>
+</table>
