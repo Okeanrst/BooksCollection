@@ -6,6 +6,11 @@ use OkeanrstBooks\Service\CollectionMapper;
 use OkeanrstBooks\Service\ImageService;
 
 return array(
+    'frontend' => [
+        'bookfoto' => [
+            'size' => ['width' => 80, 'height' => 80],
+        ]
+    ],
     'controllers' => array(
         'factories' => array(
 			'Collection' => 'OkeanrstBooks\Factory\Controller\CollectionControllerFactory'            
