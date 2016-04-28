@@ -59,7 +59,7 @@ return array(
                     'route'    => '/books',                    
                     'defaults' => array(
                         'controller' => 'Collection',
-                        'action'     => 'collection',
+                        'action'     => 'index',
                     ),
                 ),
                 'may_terminate' => true,
@@ -67,7 +67,7 @@ return array(
                     'collection' => array(
                         'type' => 'segment',
                         'options' => array(
-                            'route' => '/collection[/][:page][/:itemCount]',
+                            'route' => '/collection[/:page][/:itemCount]',
                             'constraints' => array(
                                 'page'     => '[0-9]+',
                                 'itemCount' => '[0-9]+',
