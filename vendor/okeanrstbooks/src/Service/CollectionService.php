@@ -9,12 +9,15 @@ class CollectionService
 {
     protected $mapper;
 
-    protected $imageService;   
+    protected $imageService;
+    
+    protected $config;
     
     public function __construct($collectionMapper, $imageService)
     {
         $this->mapper = $collectionMapper;
-        $this->imageService = $imageService;     
+        $this->imageService = $imageService;
+        $this->config = $config;
     }
     
     public function getAllBooks()
@@ -110,7 +113,9 @@ class CollectionService
         $bookfile->setMimeType($bookType);
         finfo_close($finfo);
 
-        $this->imageService->makePreview($pathPhoto, 80, 80);
+        $width = $this->config['bookfoto']['size']['width'];
+        $height = $this->config['bookfoto']['size']['height'];
+        $this->imageService->makePreview($pathPhoto, $width, $height);
 
         $pathPhoto = substr($pathPhoto, stripos($pathPhoto, 'public') + 7);
         $pathBook = substr($pathBook, stripos($pathBook, 'public') + 7);
@@ -142,7 +147,9 @@ class CollectionService
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $photoType = finfo_file($finfo, $pathPhoto);
             finfo_close($finfo);
-            $this->imageService->makePreview($pathPhoto, 80, 80);
+            $width = $this->config['bookfoto']['size']['width'];
+            $height = $this->config['bookfoto']['size']['height'];
+            $this->imageService->makePreview($pathPhoto, $width, $height);
             $pathPhoto = substr($pathPhoto, stripos($pathPhoto, 'public') + 6);
             $namePhoto = substr($pathPhoto, strripos($pathPhoto, '/')+1);
             $photofile->setPath($pathPhoto);
