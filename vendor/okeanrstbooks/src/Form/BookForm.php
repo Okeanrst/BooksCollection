@@ -242,7 +242,21 @@ class BookForm extends Form
                         'options' => array(
                             'max' => '50MB'
                         )
-                    ),                                        
+                    ),
+                    array(
+                        'name' => 'filemimetype',
+                        'options' => array(
+                            'mimeType' => array('image/jpeg', 'image/png', 'image/bmp', 'image/gif',
+                                'image/tiff', 'text/plain', 'text/rtf', 'application/pdf',
+                                )
+                        )
+                    ),
+                    /*array(
+                        'name' => 'fileexcludemimetype',
+                        'options' => array(
+                            'mimeType' => array('application/octet-stream', 'text/x-php')
+                        )
+                    )*/                                        
                 )
             ));
             
