@@ -31,8 +31,7 @@ function loadPage(e) {
     var url = $(target).attr('href');       
     var type = target.dataset.type;    
     $('embed', $('#ajaxpagefile')).attr('src', url);   
-    $('#ajaxpagefile').removeClass('hidden').addClass('ajaxpage');
-    
+    $('#ajaxpagefile').removeClass('hidden').addClass('ajaxpage');    
 }
 
 function newAction(e) {
@@ -96,22 +95,23 @@ function newAction(e) {
                 } else {
                     if (data['success']) {
                         switch (formName) {
-                        case 'newbook':
-                            line = prepareBookLine($('#line')[0], data['data'], false);
+                        case 'newbook':                            
+                            var newLine = editBookLine($($('#line')[0]).clone(true, true).removeAttr('id'), data['data'], false);
+                            break
                         case 'newauthor':
-                            line = prepareAuthorLine($('#line')[0], data['data'], false);
+                            var newLine = editAuthorLine($($('#line')[0]).clone(true, true).removeAttr('id'), data['data'], false);
                             break
                         case 'newrubric':                    
-                            line = prepareRubricLine($('#line')[0], data['data'], false);
+                            var newLine = editRubricLine($($('#line')[0]).clone(true, true).removeAttr('id'), data['data'], false);
                             break
-                    }
-                        $(line).removeClass('hidden');
-                        $('.table').append(line);                    
+                        } 
+                        $(newLine).removeClass('hidden');
+                        $('.table').append(newLine);                    
                     } 
                 }
             },
             error: function(result) {
-                console.log(result.responseText);                            
+                console.log(result.responseText);
                 flashMessage(mess, 'AJAX error', '');
                 ajaxpage.removeClass('ajaxpage').addClass('hidden');
                 $('#cover').removeClass('cover').addClass('hidden');                    
@@ -242,12 +242,12 @@ function editAction(e) {
                                 if (data['success']) {
                                     switch (formName) {
                                     case 'editbook':
-                                        line = prepareBookLine(parentTr, data['data'], true);
+                                        editBookLine(parentTr, data['data'], true);
                                     case 'editauthor':
-                                        line = prepareAuthorLine(parentTr, data['data'], true);
+                                        editAuthorLine(parentTr, data['data'], true);
                                         break
                                     case 'editrubric':                    
-                                        line = prepareRubricLine(parentTr, data['data'], true);
+                                        editRubricLine(parentTr, data['data'], true);
                                         break
                                     }                                                    
                                 } 
@@ -358,85 +358,86 @@ function addCancel(elem) {
     return $('button', elem);    
 }
 
-function prepareBookLine(line, data, isEdit) {
+function editBookLine(target, data, isEdit) {
     var num = 0;
     $('td[name="num"]').each(function() {
         num = ($(this).text() > num) ? $(this).text() : num;
     });
-    var title = $('td[name="title"]', $(line))[0];      
+    var title = $('td[name="title"]', $(target))[0];      
     $('a', $(title))[0].dataset.id = data['id'];
     $('a', $(title)).attr('href', data['title']['href']).text('').text(data['title']['title']);
-    var author = $('td[name="author"]', $(line));    
+    var author = $('td[name="author"]', $(target));    
     $('a', $(author)).attr('href', data['author']['href']).text('').text(data['author']['value']);    
     var dataRubric = data['rubric'];
-    $('td[name="rubric"]', $(line)).text('');
+    $('td[name="rubric"]', $(target)).text('');
     for (property in dataRubric) {
         var a = document.createElement('a');
         $(a).attr('href', dataRubric[property]['href']).text('').text(dataRubric[property]['value']);
-        $('td[name="rubric"]', $(line)).append(a);
+        $('td[name="rubric"]', $(target)).append(a);
     }
-    $('img', $(line)).attr('src', data['img']);
-    var view = $('td[name="view"]', $(line))[0];
+    $('img', $(target)).attr('src', data['img']);
+    var view = $('td[name="view"]', $(target))[0];
     
     $('a', $(view)).attr('href', data['view']['href']);
     var a = $('a', $(view))[0];
+    a.dataset.id = data['id'];
     a.dataset.type = data['view']['type'];
-    var edit = $('td[name="edit"]', $(line));
+    var edit = $('td[name="edit"]', $(target));
     $('a', $(edit)).attr('href', data['edit']);
-    var del = $('td[name="delete"]', $(line));
+    var del = $('td[name="delete"]', $(target));
     $('a', $(del)).attr('href', data['del']);
     if (!isEdit) {
         num = num*1+1;
-        $('td[name="num"]', $(line)).text('').text(num);
+        $('td[name="num"]', $(target)).text('').text(num);
         var aedit = $('a', $(edit))[0];
         aedit.dataset.id = data['id'];
         var adel = $('a', $(del))[0];
         adel.dataset.id = data['id'];
     }    
-    return line;
+    return target;
 }
 
-function prepareAuthorLine(line, data, isEdit) {
+function editAuthorLine(target, data, isEdit) {
     var num = 0;
     $('td[name="num"]').each(function() {
         num = ($(this).text() > num) ? $(this).text() : num;
     });        
-    var author = $('td[name="author"]', $(line));    
+    var author = $('td[name="author"]', $(target));    
     $('a', $(author)).attr('href', data['author']['href']).text('').text(data['author']['value']);
-    $('td[name="name"]', $(line)).text('').text(data['name']);
-    var edit = $('td[name="edit"]', $(line));
+    $('td[name="name"]', $(target)).text('').text(data['name']);
+    var edit = $('td[name="edit"]', $(target));
     $('a', $(edit)).attr('href', data['edit']);
-    var del = $('td[name="delete"]', $(line));
+    var del = $('td[name="delete"]', $(target));
     $('a', $(del)).attr('href', data['del']);
     if (!isEdit) {
         num = num*1+1;
-        $('td[name="num"]', $(line)).text('').text(num);           
+        $('td[name="num"]', $(target)).text('').text(num);           
         var aedit = $('a', $(edit))[0];
         aedit.dataset.id = data['id'];
         var adel = $('a', $(del))[0];
         adel.dataset.id = data['id'];
     }    
-    return line;
+    return target;
 }
 
-function prepareRubricLine(line, data, isEdit) {
+function editRubricLine(target, data, isEdit) {
     var num = 0;
     $('td[name="num"]').each(function() {
         num = ($(this).text() > num) ? $(this).text() : num;
     });        
-    var rubric = $('td[name="rubric"]', $(line));    
+    var rubric = $('td[name="rubric"]', $(target));    
     $('a', $(rubric)).attr('href', data['rubric']['href']).text('').text(data['rubric']['value']);    
-    var edit = $('td[name="edit"]', $(line));
+    var edit = $('td[name="edit"]', $(target));
     $('a', $(edit)).attr('href', data['edit']);
-    var del = $('td[name="delete"]', $(line));
+    var del = $('td[name="delete"]', $(target));
     $('a', $(del)).attr('href', data['del']);
     if (!isEdit) {
         num = num*1+1;
-        $('td[name="num"]', $(line)).text('').text(num);           
+        $('td[name="num"]', $(target)).text('').text(num);           
         var aedit = $('a', $(edit))[0];
         aedit.dataset.id = data['id'];
         var adel = $('a', $(del))[0];
         adel.dataset.id = data['id'];
     }    
-    return line;
+    return target;
 }
