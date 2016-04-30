@@ -183,6 +183,8 @@ class CollectionController extends AbstractActionController
                 $this->flashMessenger()->addSuccessMessage('Book has been successfully added');         
                 return $this->redirect()->toRoute('books/newbook');                
             } else {
+                $data = $form->getData();
+                $this->deleteInvalidFile($data);
                 $view->form = $form;                
                 return $view;               
             }            
@@ -545,7 +547,7 @@ class CollectionController extends AbstractActionController
                 $id = (int) $request->getPost('id');
                 $author = $this->collection->getAuthorById($id);
                 if ($author) {                   
-                    $this->collection->delete($author);                    
+                    $this->collection->deleteAuthor($author);                    
                     $this->flashMessenger()->addSuccessMessage('Author has been deleted');
                     return $this->redirect()->toRoute('books/authors');                    
                 } else {
@@ -585,7 +587,7 @@ class CollectionController extends AbstractActionController
             }
             $author = $this->collection->getAuthorById($id);
             if ($author) {                   
-                $this->collection->delete($author);                                        
+                $this->collection->deleteAuthor($author);                                        
                 return $response->setContent(Json::encode(array('success' => 'Author has been deleted')));
             } else {
                 return $response->setContent(Json::encode(array('error' => 'Author not found')));
@@ -837,5 +839,17 @@ class CollectionController extends AbstractActionController
         $data['edit'] = $urlHelper('books/editrubric', ['id' => $rubric->getId()]);
         $data['del'] = $urlHelper('books/deleterubric', ['id' => $rubric->getId()]);
         return $data;
+    }
+
+    private function deleteInvalidFile($data)
+    {
+        $pathPhoto = str_replace('\\', '/', $data['photofile']['tmp_name']);
+        $pathBook = str_replace('\\', '/', $data['bookfile']['tmp_name']);
+        if (file_exists($pathPhoto)) {
+            @unlink($pathPhoto);
+        }
+        if (file_exists($pathBook)) {
+            @unlink($pathBook);
+        }
     }
 }   
