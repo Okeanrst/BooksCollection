@@ -34,14 +34,14 @@ class CollectionService
         return false;
     }
     
-    public function getBooksByRubric($id)
+    public function getBooksByRubricId($id)
     {
-        return $this->mapper->getBooksByRubric($id);
+        return $this->mapper->getBooksByRubricId($id);
     }
     
     public function getBooksByRubricPaginator($id, $page = 1, $itemCount = 5)
     {
-        $result = $this->getBooksByRubric($id);
+        $result = $this->getBooksByRubricId($id);
         if ($result) {
             return $this->getPaginator($result, $page, $itemCount);
         }
@@ -66,7 +66,7 @@ class CollectionService
         return false;
     }
 
-    public function getBooksByAuthor($id)
+    public function getBooksByAuthorId($id)
     {
         return $this->mapper->getBooksByAuthor((int) $id);
     }
@@ -111,7 +111,7 @@ class CollectionService
         $photofile->setMimeType($photoType);
         $bookType = finfo_file($finfo, $pathBook);
         $bookType = ($bookType)? $bookType : $data['bookfile']['type'];
-        $bookType = ($bookType)? $bookType : '';
+        $bookType = ($bookType)? $bookType : '';        
         $bookfile->setMimeType($bookType);
         finfo_close($finfo);
 
@@ -142,12 +142,11 @@ class CollectionService
 
     public function editBook(\OkeanrstBooks\Entity\Book $book, $data)
     {       
-        $data['curphotofile'] = $book->getPhotofile();
-        $data['curbookfile'] = $book->getBookfile();
+        $photofile = $book->getPhotofile();
+        $bookfile = $book->getBookfile();
         $this->hydrateBook($book, $data);
 
-        if (isset($data['photofile']) && $data['photofile']['tmp_name']) {            
-            $photofile = new \OkeanrstBooks\Entity\Filephoto();
+        if (isset($data['photofile']) && $data['photofile']['tmp_name']) {
             $pathPhoto = str_replace('\\', '/', $data['photofile']['tmp_name']);
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $photoType = finfo_file($finfo, $pathPhoto);
@@ -158,16 +157,11 @@ class CollectionService
             $photofile->setPath($pathPhoto);
             $photofile->setName($namePhoto);
             $photofile->setSize($data['photofile']['size']);
-            $photofile->setMimeType($photoType);
-            $curPathPhoto = './public'.$data['curphotofile']->getPath();
-            @unlink($curPathPhoto);
-        } else {
-            $photofile = $data['curphotofile'];
+            $photofile->setMimeType($photoType);            
         }
 
         
-        if (isset($data['bookfile']) && $data['bookfile']['tmp_name']) {            
-            $bookfile = new \OkeanrstBooks\Entity\Filebook();
+        if (isset($data['bookfile']) && $data['bookfile']['tmp_name']) { 
             $pathBook = str_replace('\\', '/', $data['bookfile']['tmp_name']);
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $bookType = finfo_file($finfo, $pathBook);
@@ -177,36 +171,31 @@ class CollectionService
             $bookfile->setPath($pathBook);
             $bookfile->setName($nameBook);
             $bookfile->setSize($data['bookfile']['size']);
-            $bookfile->setMimeType($bookType);
-            $curPathBook = './public'.$data['curbookfile']->getPath();
-            @unlink($curPathBook);
-        } else {
-            $bookfile = $data['curbookfile'];
-        }
-
-        $book->setPhotofile($photofile);
-        $book->setBookfile($bookfile);
+            $bookfile->setMimeType($bookType);            
+        }        
 
         $this->mapper->save($book);        
     }
 
     public function deleteBook(\OkeanrstBooks\Entity\Book $book)
-    {
-        $photoPath = $book->getPhotofile()->getPath();
-        if ($photoPath) {
-            @unlink('./public'.$photoPath);
-        }
-        $bookPath = $book->getBookfile()->getPath();
-        if ($bookPath) {
-            @unlink('./public'.$bookPath);
-        }
+    {        
         $this->mapper->delete($book);
+    }
+
+    public function deleteAuthor(\OkeanrstBooks\Entity\Author $author)
+    {
+        $authorId = $author->getId();
+        $books = $this->mapper->getBooksByAuthorId($authorId);
+        foreach ($books as $book) {            
+            $this->mapper->delete($book);
+        }
+        $this->mapper->delete($author);
     }
 
     public function deleteRubric(\OkeanrstBooks\Entity\Rubric $rubric)
     {
         $rubricId = $rubric->getId();
-        $books = $this->mapper->getBooksByRubric($rubricId);
+        $books = $this->mapper->getBooksByRubricId($rubricId);
         foreach ($books as $book) {
             $book->removeRubric($rubric);
         }
