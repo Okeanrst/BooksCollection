@@ -35,7 +35,7 @@ class Book
     /**
      * @var \OkeanrstBooks\Entity\Filephoto
      *
-     * @ORM\OneToOne(targetEntity="OkeanrstBooks\Entity\Filephoto", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="OkeanrstBooks\Entity\Filephoto", cascade={"persist", "remove"})
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="filephotos_id", referencedColumnName="id", unique=true, nullable=true)
      * })
@@ -64,7 +64,7 @@ class Book
     /**
      * @var \OkeanrstBooks\Entity\Filebook
      *
-     * @ORM\OneToOne(targetEntity="OkeanrstBooks\Entity\Filebook", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="OkeanrstBooks\Entity\Filebook", cascade={"persist", "remove"})
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="filebooks_id", referencedColumnName="id", unique=true, nullable=false)
      * })
