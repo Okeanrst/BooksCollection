@@ -3,12 +3,14 @@
 namespace OkeanrstBooks\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Event\PreUpdateEventArgs;
 
 /**
  * Filebook
  *
  * @ORM\Table(name="Filebook")
  * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks
  */
 class Filebook
 {
@@ -156,5 +158,22 @@ class Filebook
         return $this->size;
     }
     
+    /** @ORM\PreUpdate */
+    public function preUpdate(PreUpdateEventArgs $eventArgs)
+    {
+        if ($eventArgs->getEntity() instanceof Filebook) {
+            if ($eventArgs->hasChangedField('name')) {                
+                @unlink('./public'.$eventArgs->getOldValue('path'));
+            }
+        }
+    }
+
+    /** @ORM\PreRemove */
+    public function preRemove($eventArgs)
+    {
+        if ($eventArgs->getEntity() instanceof Filebook) {                           
+            @unlink('./public'.$eventArgs->getEntity()->getPath());            
+        }
+    }
 }
 
