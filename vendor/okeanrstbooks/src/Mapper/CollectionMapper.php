@@ -36,9 +36,9 @@ class CollectionMapper
     public function getAllRubrics()
     {
         return $this->em->getRepository('OkeanrstBooks\Entity\Rubric')->findAll();
-    }
+    }    
 
-    public function getBooksByRubric($id)
+    public function getBooksByRubricId($id)
     {        
         $dql = 'SELECT u FROM OkeanrstBooks\Entity\Book u JOIN u.rubric a WHERE a.id =  ?1';          
         $entity = $this->em->createQuery($dql)
@@ -47,7 +47,7 @@ class CollectionMapper
         return $entity;        
     }
     
-    public function getBooksByAuthor($id)
+    public function getBooksByAuthorId($id)
     {
         return $this->em->getRepository('OkeanrstBooks\Entity\Book')->findBy(array('author' => $id));
     }
@@ -81,13 +81,7 @@ class CollectionMapper
     public function getRubricById($id)
     {
         return $this->em->find('OkeanrstBooks\Entity\Rubric', $id);        
-    }
-    
-    public function getBooksByRubricId($id)
-    {
-        $er = $this->em->getRepository($this->options->getUserEntityClass());
-        return $er->findOneBy(array('username' => $username));
-    }
+    }   
     
     protected function persist($entity)
     {
