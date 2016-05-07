@@ -34,12 +34,14 @@ $this->headTitle($title);
                     </td>
                 <?php endif; ?>
             </tr>
-        <?php endforeach ?>
-    <?php endif ?>
-    <tr id="line" class="hidden">
-        <td name="num"></td><td name="rubric"><a href=""></a></td><td name="edit"><a data-id="" class="ajaxedit" href="" >edit</a></td>
-        <td name="delete"><a class="ajaxdel" href="" >delete</a></td>                    
-    </tr>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    <?php if ($this->zfcUserIdentity()):?>    
+        <tr id="line" class="hidden">
+            <td name="num"></td><td name="rubric"><a href=""></a></td><td name="edit"><a data-id="" class="ajaxedit" href="" >edit</a></td>
+            <td name="delete"><a class="ajaxdel" href="" >delete</a></td>                    
+        </tr>
+    <?php endif; ?>
 </table>
 
 <?php if ($this->collection) {
@@ -47,22 +49,24 @@ $this->headTitle($title);
 } ?>
 
 <div id="cover" class="hidden"></div>
-<div id="ajaxnew" class="hidden">
-    <?php 
-    $this->rubricForm->setAttribute('name', 'newrubric');    
-    echo $this->partial('rubricform.phtml', ['form' => $this->rubricForm]); ?>
-</div>
-<div id="ajaxedit" class="hidden">
-    <?php 
-    $this->rubricForm->setAttribute('name', 'editrubric');    
-    echo $this->partial('rubricform.phtml', ['form' => $this->rubricForm]); ?>
-</div>
-<div id="ajaxdelete" class="hidden">   
-    <?php    
-    $title = 'Are you sure that you want to delete rubric?';    
-    echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => 'deleterubric' ]);
-    ?>    
-</div>
+<?php if ($this->zfcUserIdentity()):?>
+    <div id="ajaxnew" class="hidden">
+        <?php 
+        $this->rubricForm->setAttribute('name', 'newrubric');    
+        echo $this->partial('rubricform.phtml', ['form' => $this->rubricForm]); ?>
+    </div>
+    <div id="ajaxedit" class="hidden">
+        <?php 
+        $this->rubricForm->setAttribute('name', 'editrubric');    
+        echo $this->partial('rubricform.phtml', ['form' => $this->rubricForm]); ?>
+    </div>
+    <div id="ajaxdelete" class="hidden">   
+        <?php    
+        $title = 'Are you sure that you want to delete rubric?';    
+        echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => 'deleterubric' ]);
+        ?>    
+    </div>
+<?php endif; ?>
 
 <script>       
     var reload = false; //reload page after action

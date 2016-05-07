@@ -36,13 +36,15 @@ $this->headTitle($title);
                     </td>
                 <?php endif; ?>
             </tr>
-        <?php endforeach ?>
-    <?php endif ?>
-    <tr id="line" class="hidden" >
-        <td name="num"></td>
-        <td name="author"><a href="" ></a></td><td name="name"></td><td name="edit"><a data-id="" class="ajaxedit" href="" >edit</a></td>
-        <td name="delete"><a data-id="" class="ajaxdel" href="">delete</a></td>                
-    </tr>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    <?php if ($this->zfcUserIdentity()):?>
+        <tr id="line" class="hidden" >
+            <td name="num"></td>
+            <td name="author"><a href="" ></a></td><td name="name"></td><td name="edit"><a data-id="" class="ajaxedit" href="" >edit</a></td>
+            <td name="delete"><a data-id="" class="ajaxdel" href="">delete</a></td>                
+        </tr>
+    <?php endif; ?>
 </table>
 
 <?php if ($this->collection) {
