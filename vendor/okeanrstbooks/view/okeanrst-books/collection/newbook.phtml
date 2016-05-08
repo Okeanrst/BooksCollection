@@ -15,8 +15,8 @@ echo $this->partial('bookform.phtml', array('form' => $this->form,));
 <script>
     $(document).ready(function() {
                
-        var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
-        var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
+        var error = '<?php echo $this->translate($this->message['error']) ?>';
+        var success = '<?php echo $this->translate($this->message['sucess']) ?>';        
         var mess = $('#flashMessage');
 
         $(document).ready(function() {               

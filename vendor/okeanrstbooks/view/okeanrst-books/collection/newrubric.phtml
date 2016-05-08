@@ -12,10 +12,9 @@ echo $this->partial('rubricform.phtml', array('form' => $this->form,));
 ?>
 
 
-<script>
-    var reload = true; //reload page after ajax action    
-    var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
-    var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
+<script>        
+    var error = '<?php echo $this->translate($this->message['error']) ?>';
+    var success = '<?php echo $this->translate($this->message['success']) ?>';       
     var mess = $('#flashMessage');    
 
     $(document).ready(function() {               

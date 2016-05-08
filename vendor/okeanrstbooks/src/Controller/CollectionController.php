@@ -165,13 +165,12 @@ class CollectionController extends AbstractActionController
     {
         $this->checkAccess();               
         $view =  new ViewModel();
-        $form = new BookForm($this->em);        
-        $submit = $form->get('submit');
-        $submit->setValue('Add book');         
-        if ($this->getRequest()->isPost()) {             
-            $book = new Book();            
-            $form->setBindOnValidate(FormInterface::BIND_MANUAL);            
-            $request = $this->getRequest();
+        $message = ['success' => '', 'error' => ''];
+        $request = $this->getRequest();
+        if ($request->isPost()) {             
+            $form = new BookForm($this->em);
+            $submit = $form->get('submit');
+            $submit->setValue('Add book');            
             $post = array_merge_recursive(
                 $request->getPost()->toArray(),
                 $request->getFiles()->toArray()
@@ -179,16 +178,22 @@ class CollectionController extends AbstractActionController
             $form->setData($post);          
             if ($form->isValid()) {    
                 $data = $form->getData();
+                $book = new Book();
                 $this->collection->addBook($book, $data);                
-                $this->flashMessenger()->addSuccessMessage('Book has been successfully added');         
-                return $this->redirect()->toRoute('books/newbook');                
+                $message['success'] = 'Book has been successfully added';
             } else {
                 $data = $form->getData();
                 $this->deleteInvalidFile($data);
+                $message['error'] = 'Data is not valid';
+                $view->message = $message;
                 $view->form = $form;                
                 return $view;               
             }            
         }
+        $form = new BookForm($this->em);        
+        $submit = $form->get('submit');
+        $submit->setValue('Add book');
+        $view->message = $message;
         $view->form = $form;      
         return $view;
     }
@@ -202,8 +207,6 @@ class CollectionController extends AbstractActionController
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
             $form = new BookForm($this->em);
-            $book = new Book(); 
-            $form->setBindOnValidate(FormInterface::BIND_MANUAL);
             $post = array_merge_recursive(
                 $request->getPost()->toArray(),
                 $request->getFiles()->toArray()
@@ -211,10 +214,13 @@ class CollectionController extends AbstractActionController
             $form->setData($post);
             if ($form->isValid()) {    
                 $data = $form->getData();                           
+                $book = new Book();
                 $this->collection->addBook($book, $data);                
                 $data = $this->prepareBookLine($book);
                 return $response->setContent(Json::encode(['success' => 'Author has been edded', 'data' => $data]));                                              
             }
+            $data = $form->getData();
+            $this->deleteInvalidFile($data);
             return $response->setContent(Json::encode(['error' => 'Data is not valid']));                                
         }        
         return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
@@ -224,8 +230,9 @@ class CollectionController extends AbstractActionController
     {
         $this->checkAccess();
         $view =  new ViewModel();
-        $form = new BookForm($this->em);         
-        if ($this->getRequest()->isPost()) {          
+        $form = new BookForm($this->em);
+        $request = $this->getRequest();         
+        if ($request->isPost()) {          
             $id = (int) $this->getRequest()->getPost('id');
             if (!$id) {
             $this->flashMessenger()->addErrorMessage('Id not found in request');
@@ -235,9 +242,7 @@ class CollectionController extends AbstractActionController
             if (!$book) {
                 $this->flashMessenger()->addErrorMessage('Book with this id not found');
                 return $this->redirect()->toRoute('books/collection');
-            }            
-            $form->setBindOnValidate(FormInterface::BIND_MANUAL);            
-            $request = $this->getRequest();
+            }             
             $post = array_merge_recursive(
                 $request->getPost()->toArray(),
                 $request->getFiles()->toArray()
@@ -259,6 +264,8 @@ class CollectionController extends AbstractActionController
                 $this->flashMessenger()->addSuccessMessage('Book has been edit');         
                 return $this->redirect()->toRoute('books/collection');                
             } else {
+                $data = $form->getData();
+                $this->deleteInvalidFile($data);
                 $this->flashMessenger()->addErrorMessage('Data is not valid');
                 return $this->redirect()->toRoute('books/editbook', ['id' => $id]);                
             }            
@@ -327,6 +334,8 @@ class CollectionController extends AbstractActionController
                 $data = $this->prepareBookLine($book);               
                 return $response->setContent(Json::encode(['success' => 'Book has been editing', 'data' => $data]));
             } else {
+                $data = $form->getData();
+                $this->deleteInvalidFile($data);
                 $form->bind($book);
                 $formData = ['id' => $form->get('id')->getValue(),
                     'title' => $form->get('title')->getValue(),
@@ -401,7 +410,8 @@ class CollectionController extends AbstractActionController
     public function newAuthorAction()
     {
         $this->checkAccess();
-        $view =  new ViewModel();                
+        $view =  new ViewModel();
+        $message = ['success' => '', 'error' => ''];                
         if ($this->getRequest()->isPost()) {
             $form = new AuthorForm($this->em);
             $entity = new Author();       
@@ -411,10 +421,11 @@ class CollectionController extends AbstractActionController
             $post = $this->getRequest()->getPost();
             $form->setData($post);          
             if ($form->isValid()) {                        
-                $this->collection->addAuthor($entity);                
-                $this->flashMessenger()->addSuccessMessage('Author has been successfully added');
-                return $this->redirect()->toRoute('books/newauthor');            
+                $this->collection->addAuthor($entity);
+                $message['success'] = 'Author has been successfully added';
             } else {               
+                $message['error'] = 'Data is not valid';
+                $view->message = $message;
                 $view->form = $form;        
                 return $view;
             }            
@@ -423,6 +434,7 @@ class CollectionController extends AbstractActionController
         $submit = $form->get('submit');
         $submit->setValue('Add author');
         $view->form = $form;
+        $view->message = $message;
         return $view;
     }
 
@@ -600,6 +612,7 @@ class CollectionController extends AbstractActionController
     {
         $this->checkAccess();                
         $view =  new ViewModel();
+        $message = ['success' => '', 'error' => ''];
         if ($this->getRequest()->isPost()) {
             $form = new RubricForm($this->em);
             $entity = new Rubric();       
@@ -610,9 +623,10 @@ class CollectionController extends AbstractActionController
             $form->setData($post);          
             if ($form->isValid()) {                        
                 $this->collection->addRubric($entity);                
-                $this->flashMessenger()->addSuccessMessage('Rubric has been successfully added');
-                return $this->redirect()->toRoute('books/newrubric');            
+                $message['success'] = 'Rubric has been successfully added';                
             } else {              
+                $message['error'] = 'Data is not valid';
+                $view->message = $message;
                 $view->form = $form;        
                 return $view;
             }            
@@ -621,6 +635,7 @@ class CollectionController extends AbstractActionController
         $submit = $form->get('submit');
         $submit->setValue('Add rubric');
         $view->form = $form;
+        $view->message = $message;
         return $view;
     }
 
@@ -843,13 +858,17 @@ class CollectionController extends AbstractActionController
 
     private function deleteInvalidFile($data)
     {
-        $pathPhoto = str_replace('\\', '/', $data['photofile']['tmp_name']);
-        $pathBook = str_replace('\\', '/', $data['bookfile']['tmp_name']);
-        if (file_exists($pathPhoto)) {
-            @unlink($pathPhoto);
+        if(isset($data['photofile']['tmp_name'])) {
+            $pathPhoto = str_replace('\\', '/', $data['photofile']['tmp_name']);
+            if (file_exists($pathPhoto)) {
+                @unlink($pathPhoto);
+            }
         }
-        if (file_exists($pathBook)) {
-            @unlink($pathBook);
+        if(isset($data['bookfile']['tmp_name'])) {
+            $pathBook = str_replace('\\', '/', $data['bookfile']['tmp_name']);
+            if (file_exists($pathBook)) {
+                @unlink($pathBook);
+            }
         }
     }
 }   
