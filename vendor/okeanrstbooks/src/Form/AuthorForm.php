@@ -80,7 +80,7 @@ class AuthorForm extends Form
     public function setData($data)
     {
         if (isset($data['lastName']) && isset($data['name'])) {            
-            $data['fullName'] = $data['lastName'].' '.$data['name'];
+            $data['fullName'] = $data['lastName'].'`*`'.$data['name'];
         }
         parent::setData($data);
     }

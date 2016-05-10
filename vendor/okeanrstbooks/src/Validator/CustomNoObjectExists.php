@@ -8,12 +8,12 @@ class CustomNoObjectExists extends DoctrineNoObjectExists
 {
 	public function isValid($value)
 	{
-		$val = explode(" ", $value);
+		$val = explode("`*`", $value);
 		$cleanedValue = $this->cleanSearchValue($val);
         $match        = $this->objectRepository->findOneBy($cleanedValue);
 
         if (is_object($match)) {
-            $this->error(self::ERROR_OBJECT_FOUND, $value);
+            $this->error(self::ERROR_OBJECT_FOUND, str_replace("`*`", ' ', $value));
 
             return false;
         }

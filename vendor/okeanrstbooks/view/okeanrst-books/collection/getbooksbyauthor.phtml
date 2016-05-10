@@ -12,33 +12,35 @@ $this->headTitle($title);
 } ?>
 <div id="cover" class="hidden"></div>
 <div id="ajaxpagefile" class="hidden"><embed width="100%" height="100%" name="plugin" id="plugin" src="" type="" internalinstanceid="3" title=""></div>
-<div id="ajaxnew" class="hidden">
-    <?php 
-    $this->bookForm->setAttribute('name', 'newbook');    
-    echo $this->partial('bookform.phtml', ['form' => $this->bookForm]); ?>
-</div>
-<div id="ajaxedit" class="hidden">
-    <?php 
-    $this->bookForm->setAttribute('name', 'editbook');    
-    echo $this->partial('bookform.phtml', ['form' => $this->bookForm]); ?>
-</div>
-<div id="ajaxdelete" class="hidden">   
-    <?php    
-    $title = 'Are you sure that you want to delete book?';    
-    echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => 'deletebook' ]);
-    ?>    
-</div>
+<?php if ($this->zfcUserIdentity()):?>
+    <div id="ajaxnew" class="hidden">
+        <?php 
+        $this->bookForm->setAttribute('name', 'newbook');    
+        echo $this->partial('bookform.phtml', ['form' => $this->bookForm]); ?>
+    </div>
+    <div id="ajaxedit" class="hidden">
+        <?php 
+        $this->bookForm->setAttribute('name', 'editbook');    
+        echo $this->partial('bookform.phtml', ['form' => $this->bookForm]); ?>
+    </div>
+    <div id="ajaxdelete" class="hidden">   
+        <?php    
+        $title = 'Are you sure that you want to delete book?';    
+        echo $this->partial('deleteform.phtml', ['title' => $title, 'name' => 'deletebook' ]);
+        ?>    
+    </div>
+<?php endif; ?>
 
 <script>
-    var reload = true; //reload page after ajax action    
+    var reload = false; //reload page after ajax action    
     var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
     var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
     var mess = $('#flashMessage');    
 
     $(document).ready(function() {               
         flashMessage(mess, error, success);
-        $('.ajaxnew').click(newAction);
-        $('.ajaxedit').click(editAction);
+        $('.ajaxnew').click(handleForm);
+        $('.ajaxedit').click(handleForm);
         $('.ajaxdel').click(deleteAction);
         $('.ajaxfile').click(loadPage);
     });    

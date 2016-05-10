@@ -7,7 +7,7 @@
 define('DEV_MOVE', true);
 
 if (DEV_MOVE) {    
-    error_reporting(E_ALL & ~E_USER_DEPRECATED);
+    error_reporting(E_ALL & ~E_USER_DEPRECATED & ~E_STRICT);
     ini_set("display_errors", 1);
 }
  

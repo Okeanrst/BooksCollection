@@ -1,3 +1,5 @@
+"use strict";
+
 function flashMessage(mess, error, success) {
     if (error !== '') {
         console.log(error);
@@ -34,250 +36,214 @@ function loadPage(e) {
     $('#ajaxpagefile').removeClass('hidden').addClass('ajaxpage');    
 }
 
-function newAction(e) {
-    e.preventDefault();
-    var target = $(e.target);    
+function handleForm(event) {
+    event.preventDefault();
+    var finish = false;
+    var target = $(event.target);    
     var url = target.attr('href').slice(7);
-    posSlesh = url.indexOf(String.fromCharCode(47));
+    var posSlesh = url.indexOf(String.fromCharCode(47));
     if (~posSlesh) {
         url = url.slice(0, posSlesh);
     }
     var formName = url;
-    ajaxform = document.forms[formName];    
-    url = String.fromCharCode(47) + 'books' + String.fromCharCode(47) + 'ajax' +url;
-    $('#cover').removeClass('hidden').addClass('cover');
-    var ajaxpage = $('#ajaxnew');
-    var cancel = addCancel(ajaxpage);
-    ajaxpage.removeClass('hidden').addClass('ajaxpage');       
-    cancel.click(function(){
-        ajaxpage.removeClass('ajaxpage').addClass('hidden');
+    var ajaxform = document.forms[formName];
+    var ajaxpage = $(ajaxform).parents('div')[0];
+    var url = String.fromCharCode(47) + 'books' + String.fromCharCode(47) + 'ajax' + formName;
+    var fields = [];
+    var selectElem = [];
+    //Добавляем кн. "Cancel", цепляем слушателя
+    var cancel = addCancel(ajaxform);
+    $(cancel).click(function(e){        
+        console.log('cancel');
+        $(ajaxpage).removeClass('ajaxpage').addClass('hidden');
         $('#cover').removeClass('cover').addClass('hidden');        
         cancel.remove();
-        $(ajaxform).unbind("submit");
+        $(ajaxform).unbind('submit');
         $('input[type!="submit"]', $(ajaxform)).each(function() {
             this.value = '';
         });
+        while (selectElem.length > 0) {
+            var popped = selectElem.pop();
+            popped.selected = false;                                                
+        }
+        $('option').each(function(){
+            this.selected = false;
+        });
+        $('[name="errprompt"]', $(ajaxform)).each(function() {
+            this.remove();
+        });       
     });
 
-    $(ajaxform).submit(function(e) { 
-        e.stopPropagation();
-        e.preventDefault();
-        cancel.unbind("click");
-        $(e.target).unbind("submit");
+    var formButton = $('input[type="submit"]', $(ajaxform))[0];
+    formButton.disabled = true;    
+    cancel.disabled = true;
+    
+    //Показываем ajax окно с формой
+    $('#cover').removeClass('hidden').addClass('cover');
+    $(ajaxpage).removeClass('hidden').addClass('ajaxpage');
+
+    //Action Edit заполняем данными форму
+    if (~formName.indexOf('edit')) {
+        var parentTr = $(target).parents("tr")[0];
+        var id = $(target)[0].dataset.id;        
+        if (isFinite(id)) {
+            $.ajax({
+                type: "POST",
+                //async: false,
+                url: url, 
+                data: {id: id},
+                success: function(result){
+                    try {
+                        var data = JSON.parse(result);                    
+                    } catch (er) {                        
+                        flashMessage(mess, 'Error JSON', '');                        
+                        $(cancel).click(); 
+                        return;
+                    }
+                    if (data.error && !data.formData) {
+                        flashMessage(mess, data.error, '');                        
+                        $(cancel).click();
+                        return;
+                    }                                               
+                    data = data.formData;                    
+                    //заполняем форму полученными данными
+                    for (var property in data) {                    
+                        var elem = ajaxform[property];                                            
+                        if (-1 !== property.indexOf('[]')) {
+                            var values = data[property].toString().split(',');
+                            $("option", $(elem)).each(function( index ) {
+                                for (var i = 0; i < values.length; i++) {
+                                    if (this.value == values[i]) {
+                                        this.selected = true;
+                                        selectElem.push(this);                                    
+                                    } 
+                                }                            
+                            });
+                        } else {                        
+                            elem.value = data[property];
+                            fields.push(property);
+                        }                        
+                    }
+                    //Цепляем слушателя на отправку формы
+                    $(ajaxform).submit(processingForm);
+                    cancel.disabled = false;
+                    formButton.disabled = false;
+                },
+                error: function(result) {
+                    $(cancel).click();
+                    flashMessage(mess, 'AJAX error', '');
+                    console.log(result.responseText);
+                }
+            });
+        }        
+    } else {
+        //Цепляем слушателя на отправку формы
+        $(ajaxform).submit(processingForm);
+        cancel.disabled = false;
+        formButton.disabled = false;
+    }
+
+    function processingForm(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        formButton.disabled = true;
+        cancel.disabled = true;
+        $('[name="errprompt"]', $(ajaxform)).each(function() {
+            this.remove();
+        });        
         var formData = new FormData(ajaxform);                
+        //Отправляем форму
         $.ajax({
             type: "POST",
             processData: false,
             contentType: false,
             url: url, 
             data: formData,
-            success: function(result){                        
+            success: function(result){
                 try {
                     var data = JSON.parse(result);                    
-                } catch (e) {
-                    var data = [];
+                } catch (e) {                
                     flashMessage(mess, 'Error JSON', '');
-                    data['error'] = '';
-                    data['success'] = '';                                                                
-                } 
-                flashMessage(mess, data['error'], data['success']);                                                       
-                ajaxpage.removeClass('ajaxpage').addClass('hidden');
-                $('#cover').removeClass('cover').addClass('hidden');                    
-                cancel.remove();                            
-                $('input[type!="submit"]', $(ajaxform)).each(function() {
-                    this.value = '';
-                });
-                $('option').each(function(){
-                    this.selected = false;
-                });
-                if (reload) {
-                    window.location.reload();
-                } else {
-                    if (data['success']) {
-                        switch (formName) {
-                        case 'newbook':                            
-                            var newLine = editBookLine($($('#line')[0]).clone(true, true).removeAttr('id'), data['data'], false);
-                            break
-                        case 'newauthor':
-                            var newLine = editAuthorLine($($('#line')[0]).clone(true, true).removeAttr('id'), data['data'], false);
-                            break
-                        case 'newrubric':                    
-                            var newLine = editRubricLine($($('#line')[0]).clone(true, true).removeAttr('id'), data['data'], false);
-                            break
-                        } 
-                        $(newLine).removeClass('hidden');
-                        $('.table').append(newLine);                    
-                    } 
+                    cancel.disabled = false;
+                    $(cancel).click();
+                    return;
                 }
+                if ('success' in data) {
+                    if (reload) {
+                        window.location.reload();
+                    } else {
+                        //Действие New либо Edit
+                        if (~~formName.indexOf('edit')) {  //formName - из внешней области
+                            switch (formName) {
+                                case 'newbook':                            
+                                    var newLine = editBookLine($($('#line')[0]).clone(true, true).removeAttr('id'), data.formData, false);
+                                    break
+                                case 'newauthor':
+                                    var newLine = editAuthorLine($($('#line')[0]).clone(true, true).removeAttr('id'), data.formData, false);
+                                    break
+                                case 'newrubric':                    
+                                    var newLine = editRubricLine($($('#line')[0]).clone(true, true).removeAttr('id'), data.formData, false);
+                                    break
+                            } 
+                            $(newLine).removeClass('hidden');
+                            $('.table').append(newLine);
+                        } else {
+                            switch (formName) {     //formName, parentTr - из внешней области
+                                case 'editbook':
+                                    editBookLine(parentTr, data.formData, true);
+                                    break
+                                case 'editauthor':
+                                    editAuthorLine(parentTr, data.formData, true);
+                                    break
+                                case 'editrubric':
+                                    editRubricLine(parentTr, data.formData, true);
+                                    break
+                            }
+                        } 
+                        flashMessage(mess, '', data['success']);
+                        cancel.disabled = false;
+                        $(cancel).click();
+                        return;
+                    }
+                }
+                if ('error' in data && !formData in data) {
+                    flashMessage(mess, data.error.descr, '');
+                    cancel.disabled = false;
+                    $(cancel).click();
+                    return;
+                }                
+                cancel.disabled = false;
+                formButton.disabled = false;                
+                flashMessage($('[name="message"]', $(ajaxform)), data.error.descr, '');
+                //Подробная информация об ошибках формы
+                var errorDatails = data.error.details;                
+                for (var property in errorDatails) {                    
+                    errorDatails[property].forEach(function(item, i, arr) {                        
+                        var selector = "dd>input[name='" + property + "']";
+                        addError($(selector.toString(), $(ajaxform)), item);
+                    });                    
+                }
+
             },
-            error: function(result) {
+            error: function(result){
                 console.log(result.responseText);
                 flashMessage(mess, 'AJAX error', '');
-                ajaxpage.removeClass('ajaxpage').addClass('hidden');
-                $('#cover').removeClass('cover').addClass('hidden');                    
-                cancel.remove();                            
-                $('input[type!="submit"]', $(ajaxform)).each(function() {
-                    this.value = '';
-                });
-            }                    
-        });        
-    });    
+                cancel.disabled = false;
+                $(cancel).click();
+            }
+        });
+    }  
 }
 
-function editAction(e) {
-    e.preventDefault();
-    var target = e.target;    
-    var url = $(target).attr('href').slice(7);
-    posSlesh = url.indexOf(String.fromCharCode(47));
-    if (~posSlesh) {
-        url = url.slice(0, posSlesh);
-    }
-    var formName = url;
-    var parentTr = $(target).parents("tr")[0];           
-    var id = target.dataset.id;
-    var selectElem = [];
-    
-    ajaxform = document.forms[formName];    
-    url = String.fromCharCode(47) + 'books' + String.fromCharCode(47) + 'ajax' +url;
-    $('#cover').removeClass('hidden').addClass('cover');
-    var ajaxpage = $('#ajaxedit');
-    if (isFinite(id)) {
-        $.ajax({
-            type: "POST",
-            //processData: false,
-            //contentType: false,
-            url: url, 
-            data: {id: id},
-            success: function(result){                
-                var cancel = addCancel(ajaxpage);
-                var fields = [];
-                cancel.click(function(){
-                    ajaxpage.removeClass('ajaxpage').addClass('hidden');
-                    $('#cover').removeClass('cover').addClass('hidden');                    
-                    cancel.remove();
-                    $(ajaxform).unbind("submit");
-                    $('input[type!="submit"]', $(ajaxform)).each(function() {
-                        this.value = '';
-                    });
-                    while (selectElem.length > 0) {
-                        popped = selectElem.pop();
-                        popped.selected = false;                                                
-                    }
-                });                
-                try {
-                    var data = JSON.parse(result);                    
-                } catch (e) {
-                    var data = [];
-                    flashMessage(mess, 'Error JSON', '');
-                    $(cancel).click();
-                    return;
-                }
-                if (data.error || !data.success) {
-                    flashMessage(mess, data.error, '');
-                    $(cancel).click();
-                    return;
-                }                                               
-                data = data.success;
-                if (!isFinite(data['id'])) {
-                    flashMessage(mess, 'id is not digit', '');
-                    $(cancel).click();                    
-                    return;
-                }               
-                    
-                for (property in data) {                    
-                    var elem = ajaxform[property];                    
-                    if (-1 !== property.indexOf('[]')) {
-                        var values = data[property].toString().split(',');
-                        $("option", $(elem)).each(function( index ) {
-                            for (var i = 0; i < values.length; i++) {
-                                if (this.value == values[i]) {
-                                    this.selected = true;
-                                    selectElem.push(this);                                    
-                                } 
-                            }                            
-                        });
-                    } else {                        
-                        elem.value = data[property];
-                        fields.push(property);
-                    }                        
-                }
-                                
-                $(ajaxpage).removeClass('hidden').addClass('ajaxpage');                
+function addCancel(elem) {
+    var btn = '<button id="cancel" class="btn btn-primary">Cancel</button>';
+    $(elem).append(btn);
+    return $('#cancel')[0];
+}
 
-                $(ajaxform).submit(function(e) { 
-                    cancel.unbind("click");                    
-                    $(e.target).unbind("submit");
-                    var formData = new FormData(ajaxform);                
-                    $.ajax({
-                        type: "POST",
-                        processData: false,
-                        contentType: false,
-                        url: url, 
-                        data: formData,
-                        success: function(result){
-                            try {
-                                var data = JSON.parse(result);                    
-                            } catch (e) {
-                                flashMessage(mess, 'Error JSON', '');
-                                var data = [];
-                                data['error'] = '';
-                                data['success'] = '';                                                                
-                            } 
-                            flashMessage(mess, data['error'], data['success']);                                                       
-                            ajaxpage.removeClass('ajaxpage').addClass('hidden');
-                            $('#cover').removeClass('cover').addClass('hidden');                    
-                            cancel.remove();                            
-                            $('input[type!="submit"]', $(ajaxform)).each(function() {
-                                this.value = '';
-                            });                            
-                            
-                            while (selectElem.length > 0) {
-                                popped = selectElem.pop();
-                                popped.selected = false;
-                            }
-
-                            if (reload) {
-                                 window.location.reload();
-                            } else {
-                                if (data['success']) {
-                                    switch (formName) {
-                                    case 'editbook':
-                                        editBookLine(parentTr, data['data'], true);
-                                    case 'editauthor':
-                                        editAuthorLine(parentTr, data['data'], true);
-                                        break
-                                    case 'editrubric':                    
-                                        editRubricLine(parentTr, data['data'], true);
-                                        break
-                                    }                                                    
-                                } 
-                            } 
-                        },
-                        error: function(result) {
-                            console.log(result.responseText);                            
-                            flashMessage(mess, 'AJAX error', '');
-                            ajaxpage.removeClass('ajaxpage').addClass('hidden');
-                            $('#cover').removeClass('cover').addClass('hidden');                    
-                            cancel.remove();                            
-                            $('input[type!="submit"]', $(ajaxform)).each(function() {
-                                this.value = '';
-                            });
-                            while (selectElem.length > 0) {
-                                popped = selectElem.pop();
-                                popped.selected = false;                                
-                            }
-                        }                    
-                    });
-                    e.stopPropagation();
-                    e.preventDefault();
-                });
-            },
-            error: function(result) {
-                $('#cover').removeClass('cover').addClass('hidden');                
-                console.log(result.responseText);
-            }                    
-        });
-    }
+function addError(targ, text) {
+    var errorLine = '<dd name="errprompt">' + text + '</dd>';    
+    $(targ).after(errorLine);
 }
 
 function deleteAction(e) {            
@@ -286,7 +252,7 @@ function deleteAction(e) {
     var parentTr = $(target).parents("tr")[0];           
     var id = target.dataset.id;
     var url = $(target).attr('href').slice(7);
-    posSlesh = url.indexOf(String.fromCharCode(47));
+    var posSlesh = url.indexOf(String.fromCharCode(47));
     if (~posSlesh) {
         url = url.slice(0, posSlesh);
     }
@@ -296,20 +262,22 @@ function deleteAction(e) {
     $('#cover').removeClass('hidden').addClass('cover');           
     $('#ajaxdelete').removeClass('hidden').addClass('ajaxpage');            
     
-    ajaxform = document.forms[formName];            
+    var ajaxform = document.forms[formName];            
     $('[name^="id"]', $(ajaxform)).val(id);
-    var cancel = $('[name^="cancel"]', $(ajaxform));             
-    cancel.click(function(e) {               
+    var cancel = $('[name^="cancel"]', $(ajaxform))[0];             
+    $(cancel).click(function(e) {               
         $('#ajaxdelete').removeClass('ajaxpage').addClass('hidden');
         $('#cover').removeClass('cover').addClass('hidden');
-        cancel.unbind("click");
+        $(cancel).unbind("click");
         $(ajaxform).unbind("submit");
         e.stopPropagation();               
         return;
     });
 
     $(ajaxform).submit(function(e) { 
-        cancel.unbind("click");
+        cancel.disabled = true;
+        e.stopPropagation();
+        e.preventDefault();
         $(e.target).unbind("submit");
         var formData = new FormData(ajaxform);                
         $.ajax({
@@ -318,45 +286,47 @@ function deleteAction(e) {
             contentType: false,
             url: url, 
             data: formData,
-            success: function(result){                        
-                $('#ajaxdelete').removeClass('ajaxpage').addClass('hidden');
-                $('#cover').removeClass('cover').addClass('hidden');
+            success: function(result){
                 try {
                     var data = JSON.parse(result);                    
                 } catch (e) {
                     flashMessage(mess, 'Error JSON', '');
-                    var data = [];
-                    data['error'] = '';
-                    data['success'] = '';                                                                
+                    cancel.disabled = false;
+                    $(cancel).click();
+                    return;                                                                
                 } 
-                flashMessage(mess, data['error'], data['success']);
-                if (data['success'] && parentTr !== undefined) {
-                    $(parentTr).remove();
-                }                
+                if ('error' in data) {
+                    flashMessage(mess, data['error'], '');
+                    cancel.disabled = false;
+                    $(cancel).click();
+                    return;
+                }
+                if ('success' in data) {
+                    flashMessage(mess, '', data['success']);
+                    if (parentTr !== undefined) {
+                        $(parentTr).remove();
+                    }                    
+                }                               
                 if (parentTr === undefined && urlRedirect !== undefined) {
                     window.location = urlRedirect;
                 }
                 if (reload) {
                     window.location.reload();
                 }
+                cancel.disabled = false;
+                $(cancel).click();
             },
             error: function(result) {
                 console.log(result.responseText);                            
                 flashMessage(mess, 'AJAX error', '');
-                $('#ajaxdelete').removeClass('ajaxpage').addClass('hidden');
-                $('#cover').removeClass('cover').addClass('hidden');
+                cancel.disabled = false;
+                $(cancel).click();
             }                    
-        });
-        e.stopPropagation();
-        e.preventDefault();
+        });        
     });           
 }
 
-function addCancel(elem) {
-    var btn = '<button class="btn btn-primary">Cancel</button>';
-    $(elem).append(btn);
-    return $('button', elem);    
-}
+
 
 function editBookLine(target, data, isEdit) {
     var num = 0;
@@ -370,7 +340,7 @@ function editBookLine(target, data, isEdit) {
     $('a', $(author)).attr('href', data['author']['href']).text('').text(data['author']['value']);    
     var dataRubric = data['rubric'];
     $('td[name="rubric"]', $(target)).text('');
-    for (property in dataRubric) {
+    for (var property in dataRubric) {
         var a = document.createElement('a');
         $(a).attr('href', dataRubric[property]['href']).text('').text(dataRubric[property]['value']);
         $('td[name="rubric"]', $(target)).append(a);

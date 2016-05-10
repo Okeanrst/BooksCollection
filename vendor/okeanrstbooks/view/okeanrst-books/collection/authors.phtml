@@ -76,8 +76,8 @@ $this->headTitle($title);
 
     $(document).ready(function() {               
         flashMessage(mess, error, success);
-        $('.ajaxnew').click(newAction);
-        $('.ajaxedit').click(editAction);
+        $('.ajaxnew').click(handleForm);
+        $('.ajaxedit').click(handleForm);
         $('.ajaxdel').click(deleteAction);
     });
     

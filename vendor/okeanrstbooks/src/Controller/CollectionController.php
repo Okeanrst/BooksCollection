@@ -202,7 +202,7 @@ class CollectionController extends AbstractActionController
     {
         $response = $this->getResponse();
         if(!$this->ajaxCheckAccess()) {
-            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Error. Access is denied!']]));
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
@@ -217,13 +217,21 @@ class CollectionController extends AbstractActionController
                 $book = new Book();
                 $this->collection->addBook($book, $data);                
                 $data = $this->prepareBookLine($book);
-                return $response->setContent(Json::encode(['success' => 'Author has been edded', 'data' => $data]));                                              
+                return $response->setContent(Json::encode(['success' => 'Author has been edded', 'formData' => $data]));                                              
             }
             $data = $form->getData();
             $this->deleteInvalidFile($data);
-            return $response->setContent(Json::encode(['error' => 'Data is not valid']));                                
+            $formErrors = [];
+            $translate = $this->viewHelperManager->get('translate');
+            $escapeHtml = $this->viewHelperManager->get('escapehtml');
+            foreach ($form as $element) {
+                array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
+                    $formErrors[$element->getName()][] = $escapeHtml($item);
+                });
+            }
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
         }        
-        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
+        return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
     }
 
     public function editBookAction()
@@ -294,7 +302,7 @@ class CollectionController extends AbstractActionController
     {
         $response = $this->getResponse();
         if(!$this->ajaxCheckAccess()) {
-            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Error. Access is denied!']]));
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
@@ -302,11 +310,11 @@ class CollectionController extends AbstractActionController
             $id = (int) $request->getPost('id');            
             $form = new BookForm($this->em);            
             if (!$id) {                
-                return $response->setContent(Json::encode(['error' => 'Id not found in request']));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Id not found in request']]));
             }
             $book = $this->collection->getBookById($id);
             if (!$book) {                
-                return $response->setContent(Json::encode(['error' => 'Book with this id not found']));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Book with this id not found']]));
             }
             $form->setBindOnValidate(FormInterface::BIND_MANUAL);            
             $request = $this->getRequest();
@@ -332,7 +340,7 @@ class CollectionController extends AbstractActionController
                 //$form->bindValues();                
                 $this->collection->editBook($book, $data);
                 $data = $this->prepareBookLine($book);               
-                return $response->setContent(Json::encode(['success' => 'Book has been editing', 'data' => $data]));
+                return $response->setContent(Json::encode(['success' => 'Book has been editing', 'formData' => $data]));
             } else {
                 $data = $form->getData();
                 $this->deleteInvalidFile($data);
@@ -342,10 +350,18 @@ class CollectionController extends AbstractActionController
                     'author' => $form->get('author')->getValue(),
                     'rubric[]' => $form->get('rubric')->getValue()
                 ];
-                return $response->setContent(Json::encode(['success' => $formData]));
+                $formErrors = [];
+                $translate = $this->viewHelperManager->get('translate');
+                $escapeHtml = $this->viewHelperManager->get('escapehtml');
+                foreach ($form as $element) {
+                    array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
+                        $formErrors[$element->getName()][] = $escapeHtml($item);
+                    });
+                }
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
             }                
         }        
-        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
+        return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
     }
 
     public function deleteBookAction()
@@ -442,7 +458,7 @@ class CollectionController extends AbstractActionController
     {
         $response = $this->getResponse();
         if(!$this->ajaxCheckAccess()) {
-            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Error. Access is denied!']]));
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
@@ -454,16 +470,24 @@ class CollectionController extends AbstractActionController
             if ($form->isValid()) {
                 $this->collection->save($author);
                 $data = $this->prepareAuthorLine($author);                                      
-                return $response->setContent(Json::encode(['success' => 'Author has been edded', 'data' => $data]));
+                return $response->setContent(Json::encode(['success' => 'Author has been edded', 'formData' => $data]));
             } else {                    
                 $formData = [
                     'lastName' => $form->get('lastName')->getValue(),
                     'name' => $form->get('name')->getValue()
                 ];
-                return $response->setContent(Json::encode($formData));                    
+                $formErrors = [];
+                $translate = $this->viewHelperManager->get('translate');
+                $escapeHtml = $this->viewHelperManager->get('escapehtml');
+                foreach ($form as $element) {
+                    array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
+                        $formErrors[$element->getName()][] = $escapeHtml($item);
+                    });
+                }                
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
             }                     
         }        
-        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
+        return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
     }
     
     public function editAuthorAction()
@@ -491,7 +515,7 @@ class CollectionController extends AbstractActionController
                 return $this->redirect()->toRoute('books/authors');                
             } else {
                 $this->flashMessenger()->addErrorMessage('Error editing author. Data is not valid');
-                return $this->redirect()->toRoute('books/editauthor', ['id' => $id]);                
+                return $this->redirect()->toRoute('books/editauthor', ['id' => $id]);                                                
             }
         }
         $id = $this->params()->fromRoute('id');
@@ -515,7 +539,7 @@ class CollectionController extends AbstractActionController
     {
         $response = $this->getResponse();
         if(!$this->ajaxCheckAccess()) {
-            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Error. Access is denied!']]));
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
@@ -523,7 +547,7 @@ class CollectionController extends AbstractActionController
             $id = (int) $request->getPost('id');            
             $form = new AuthorForm($this->em);            
             if (!$id) {                
-                return $response->setContent(Json::encode(['error' => 'id not found']));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'id not found']]));
             }
             $author = $this->collection->getAuthorById($id);
             if ($author) {          
@@ -532,20 +556,28 @@ class CollectionController extends AbstractActionController
                 if ($form->isValid()) {
                     $this->collection->save($author);
                     $data = $this->prepareAuthorLine($author);                                       
-                    return $response->setContent(Json::encode(['success' => 'Author has been editing', 'data' => $data]));
+                    return $response->setContent(Json::encode(['success' => 'Author has been editing', 'formData' => $data]));
                 } else {                    
                     $formData = ['id' => $form->get('id')->getValue(),
                         'lastName' => $form->get('lastName')->getValue(),
                         'name' => $form->get('name')->getValue()
                     ];
-                    return $response->setContent(Json::encode(['success' => $formData]));                    
+                    $formErrors = [];
+                    $translate = $this->viewHelperManager->get('translate');
+                    $escapeHtml = $this->viewHelperManager->get('escapehtml');
+                    foreach ($form as $element) {
+                        array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
+                            $formErrors[$element->getName()][] = $escapeHtml($item);
+                        });
+                    }
+                    return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));                    
                 }          
                 
             } else {
-                return $response->setContent(Json::encode(['error' => 'author not found']));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'author not found']]));
             }            
         }        
-        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
+        return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
     }
     
     public function deleteAuthorAction()
@@ -643,7 +675,7 @@ class CollectionController extends AbstractActionController
     {
         $response = $this->getResponse();
         if(!$this->ajaxCheckAccess()) {
-            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Error. Access is denied!']]));
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
@@ -655,15 +687,23 @@ class CollectionController extends AbstractActionController
             if ($form->isValid()) {
                 $this->collection->save($rubric);                                       
                 $data = $this->prepareRubricLine($rubric);
-                return $response->setContent(Json::encode(['success' => 'Rubric has been added', 'data' => $data]));
+                return $response->setContent(Json::encode(['success' => 'Rubric has been added', 'formData' => $data]));
             } else {                    
                 $formData = [
                     'Title' => $form->get('title')->getValue()
                 ];
-                return $response->setContent(Json::encode($formData));                    
+                $formErrors = [];
+                $translate = $this->viewHelperManager->get('translate');
+                $escapeHtml = $this->viewHelperManager->get('escapehtml');
+                foreach ($form as $element) {
+                    array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
+                        $formErrors[$element->getName()][] = $escapeHtml($item);
+                    });
+                }
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
             }                     
         }        
-        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
+        return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
 
     }
     
@@ -708,7 +748,7 @@ class CollectionController extends AbstractActionController
     {
         $response = $this->getResponse();
         if(!$this->ajaxCheckAccess()) {
-            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Error. Access is denied!']]));
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
@@ -716,7 +756,7 @@ class CollectionController extends AbstractActionController
             $id = (int) $request->getPost('id');            
             $form = new RubricForm($this->em);            
             if (!$id) {                
-                return $response->setContent(Json::encode(['error' => 'Id not found']));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Id not found']]));
             }
             $rubric = $this->collection->getRubricById($id);
             if ($rubric) {          
@@ -725,18 +765,26 @@ class CollectionController extends AbstractActionController
                 if ($form->isValid()) {
                     $this->collection->save($rubric);
                     $data = $this->prepareRubricLine($rubric);                                      
-                    return $response->setContent(Json::encode(['success' => 'Rubric has been editing', 'data' => $data]));
+                    return $response->setContent(Json::encode(['success' => 'Rubric has been editing', 'formData' => $data]));
                 } else {                    
                     $formData = ['id' => $form->get('id')->getValue(),
                         'title' => $form->get('title')->getValue()                        
                     ];
-                    return $response->setContent(Json::encode(['success' => $formData]));                    
+                    $formErrors = [];
+                    $translate = $this->viewHelperManager->get('translate');
+                    $escapeHtml = $this->viewHelperManager->get('escapehtml');
+                    foreach ($form as $element) {
+                        array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
+                            $formErrors[$element->getName()][] = $escapeHtml($item);
+                        });
+                    }
+                    return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
                 }                
             } else {
-                return $response->setContent(Json::encode(['error' => 'Rubric not found']));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Rubric not found']]));
             }            
         }        
-        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
+        return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
     }
     
     public function deleteRubricAction()

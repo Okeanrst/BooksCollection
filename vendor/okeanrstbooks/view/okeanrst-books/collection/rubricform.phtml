@@ -2,6 +2,7 @@
 echo $this->form()->openTag($this->form); ?>
 
 <dl class="zend_form">
+	<dd name="message" class="hidden"></dd>
 	<dd><?php echo $this->formHidden($this->form->get('id')) ?></dd>
     <?php echo $this->formElementErrors($this->form->get('id')); ?>
 
