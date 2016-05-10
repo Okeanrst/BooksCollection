@@ -87,5 +87,6 @@ div.container a.brand {
 
 .btn {
   margin-top: 10px;
+  min-width: 70px;
 }
 

@@ -264,18 +264,21 @@ function deleteAction(e) {
     
     var ajaxform = document.forms[formName];            
     $('[name^="id"]', $(ajaxform)).val(id);
-    var cancel = $('[name^="cancel"]', $(ajaxform))[0];             
+    var cancel = $('[name^="cancel"]', $(ajaxform))[0];
+    var btnYes = $('input[name="yes"]', $(ajaxform))[0];            
     $(cancel).click(function(e) {               
         $('#ajaxdelete').removeClass('ajaxpage').addClass('hidden');
         $('#cover').removeClass('cover').addClass('hidden');
         $(cancel).unbind("click");
         $(ajaxform).unbind("submit");
+        btnYes.disabled = false;
         e.stopPropagation();               
         return;
     });
 
     $(ajaxform).submit(function(e) { 
         cancel.disabled = true;
+        btnYes.disabled = true;
         e.stopPropagation();
         e.preventDefault();
         $(e.target).unbind("submit");
@@ -314,6 +317,7 @@ function deleteAction(e) {
                     window.location.reload();
                 }
                 cancel.disabled = false;
+                btnYes.disabled = false;
                 $(cancel).click();
             },
             error: function(result) {

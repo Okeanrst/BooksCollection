@@ -217,10 +217,10 @@ class CollectionController extends AbstractActionController
                 $book = new Book();
                 $this->collection->addBook($book, $data);                
                 $data = $this->prepareBookLine($book);
-                return $response->setContent(Json::encode(['success' => 'Author has been edded', 'formData' => $data]));                                              
+                return $response->setContent(Json::encode(['success' => 'The book has been added', 'formData' => $data]));                                              
             }
-            $data = $form->getData();
-            $this->deleteInvalidFile($data);
+            $formData = $form->getData();
+            $this->deleteInvalidFile($formData);
             $formErrors = [];
             $translate = $this->viewHelperManager->get('translate');
             $escapeHtml = $this->viewHelperManager->get('escapehtml');
@@ -269,7 +269,7 @@ class CollectionController extends AbstractActionController
             if ($form->isValid()) {    
                 $data = $form->getData();                
                 $this->collection->editBook($book, $data);                
-                $this->flashMessenger()->addSuccessMessage('Book has been edit');         
+                $this->flashMessenger()->addSuccessMessage('The book was edited');         
                 return $this->redirect()->toRoute('books/collection');                
             } else {
                 $data = $form->getData();
@@ -340,7 +340,7 @@ class CollectionController extends AbstractActionController
                 //$form->bindValues();                
                 $this->collection->editBook($book, $data);
                 $data = $this->prepareBookLine($book);               
-                return $response->setContent(Json::encode(['success' => 'Book has been editing', 'formData' => $data]));
+                return $response->setContent(Json::encode(['success' => 'The book was edited', 'formData' => $data]));
             } else {
                 $data = $form->getData();
                 $this->deleteInvalidFile($data);
@@ -376,7 +376,7 @@ class CollectionController extends AbstractActionController
                 $book = $this->collection->getBookById($id);
                 if ($book) {                   
                     $this->collection->deleteBook($book);                    
-                    $this->flashMessenger()->addSuccessMessage('Book has been deleted');
+                    $this->flashMessenger()->addSuccessMessage('The book has been removed.');
                     return $this->redirect()->toRoute('books/collection');                    
                 } else {
                     $this->flashMessenger()->addErrorMessage('Error. Book not found!');
@@ -415,7 +415,7 @@ class CollectionController extends AbstractActionController
             $book = $this->collection->getBookById($id);
             if ($book) {                   
                 $this->collection->deleteBook($book);                                        
-                return $response->setContent(Json::encode(array('success' => 'Book has been deleted')));
+                return $response->setContent(Json::encode(array('success' => 'The book has been removed.')));
             } else {
                 return $response->setContent(Json::encode(array('error' => 'Book not found')));
             }            
@@ -438,7 +438,7 @@ class CollectionController extends AbstractActionController
             $form->setData($post);          
             if ($form->isValid()) {                        
                 $this->collection->addAuthor($entity);
-                $message['success'] = 'Author has been successfully added';
+                $message['success'] = 'The author has been successfully added';
             } else {               
                 $message['error'] = 'Data is not valid';
                 $view->message = $message;
@@ -470,7 +470,7 @@ class CollectionController extends AbstractActionController
             if ($form->isValid()) {
                 $this->collection->save($author);
                 $data = $this->prepareAuthorLine($author);                                      
-                return $response->setContent(Json::encode(['success' => 'Author has been edded', 'formData' => $data]));
+                return $response->setContent(Json::encode(['success' => 'The author has been successfully added', 'formData' => $data]));
             } else {                    
                 $formData = [
                     'lastName' => $form->get('lastName')->getValue(),
@@ -511,7 +511,7 @@ class CollectionController extends AbstractActionController
             $form->setData($post);          
             if ($form->isValid()) {
                 $this->collection->save($author);
-                $this->flashMessenger()->addSuccessMessage('Athor has been successfully editing');                   
+                $this->flashMessenger()->addSuccessMessage('The author has been edited');                   
                 return $this->redirect()->toRoute('books/authors');                
             } else {
                 $this->flashMessenger()->addErrorMessage('Error editing author. Data is not valid');
@@ -556,7 +556,7 @@ class CollectionController extends AbstractActionController
                 if ($form->isValid()) {
                     $this->collection->save($author);
                     $data = $this->prepareAuthorLine($author);                                       
-                    return $response->setContent(Json::encode(['success' => 'Author has been editing', 'formData' => $data]));
+                    return $response->setContent(Json::encode(['success' => 'The author has been edited', 'formData' => $data]));
                 } else {                    
                     $formData = ['id' => $form->get('id')->getValue(),
                         'lastName' => $form->get('lastName')->getValue(),
@@ -592,7 +592,7 @@ class CollectionController extends AbstractActionController
                 $author = $this->collection->getAuthorById($id);
                 if ($author) {                   
                     $this->collection->deleteAuthor($author);                    
-                    $this->flashMessenger()->addSuccessMessage('Author has been deleted');
+                    $this->flashMessenger()->addSuccessMessage('The author has been deleted');
                     return $this->redirect()->toRoute('books/authors');                    
                 } else {
                     $this->flashMessenger()->addErrorMessage('Error. Athor not found!');
@@ -632,7 +632,7 @@ class CollectionController extends AbstractActionController
             $author = $this->collection->getAuthorById($id);
             if ($author) {                   
                 $this->collection->deleteAuthor($author);                                        
-                return $response->setContent(Json::encode(array('success' => 'Author has been deleted')));
+                return $response->setContent(Json::encode(array('success' => 'The author has been deleted')));
             } else {
                 return $response->setContent(Json::encode(array('error' => 'Author not found')));
             }            
@@ -712,11 +712,11 @@ class CollectionController extends AbstractActionController
         $this->checkAccess();
         $id = (int) $this->params()->fromRoute('id');
         if (!$id) {
-            return $this->redirect()->toRoute('books/authors');
+            return $this->redirect()->toRoute('books/rubrics');
         }
         $author = $this->collection->getAuthorById($id);
         if (!$author) {
-            return $this->redirect()->toRoute('books/authors');
+            return $this->redirect()->toRoute('books/rubrics');
         }
         $form = new AuthorForm($this->em);
         $form->bind($author);
@@ -728,14 +728,14 @@ class CollectionController extends AbstractActionController
                 $result = $this->collection->getAuthorById($id);
                 if ($result) {
                     $this->collection->save($author);
-                    $this->flashMessenger()->addSuccessMessage('Athor has been successfully editing');                   
-                    return $this->redirect()->toRoute('books/authors');
+                    $this->flashMessenger()->addSuccessMessage('Rubric has been successfully editing');                   
+                    return $this->redirect()->toRoute('books/rubrics');
                 } else {
-                    $this->flashMessenger()->addErrorMessage('Error editing author');
-                    return $this->redirect()->toRoute('books/authors');
+                    $this->flashMessenger()->addErrorMessage('Error editing rubric');
+                    return $this->redirect()->toRoute('books/rubrics');
                 }
             } else {
-                $this->flashMessenger()->addErrorMessage('Error editing author. Data is not valid');                
+                $this->flashMessenger()->addErrorMessage('Error editing rubric. Data is not valid');                
             }
         }
         $view =  new ViewModel();
