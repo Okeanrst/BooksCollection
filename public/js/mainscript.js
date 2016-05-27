@@ -82,65 +82,65 @@ function handleForm(event) {
     $('#cover').removeClass('hidden').addClass('cover');
     $(ajaxpage).removeClass('hidden').addClass('ajaxpage');
 
-    //Action Edit заполняем данными форму
-    if (~formName.indexOf('edit')) {
-        var parentTr = $(target).parents("tr")[0];
-        var id = $(target)[0].dataset.id;        
-        if (isFinite(id)) {
-            $.ajax({
-                type: "POST",
-                //async: false,
-                url: url, 
-                data: {id: id},
-                success: function(result){
-                    try {
-                        var data = JSON.parse(result);                    
-                    } catch (er) {                        
-                        flashMessage(mess, 'Error JSON', '');                        
-                        $(cancel).click(); 
-                        return;
-                    }
-                    if (data.error && !data.formData) {
-                        flashMessage(mess, data.error, '');                        
-                        $(cancel).click();
-                        return;
-                    }                                               
-                    data = data.formData;                    
-                    //заполняем форму полученными данными
-                    for (var property in data) {                    
-                        var elem = ajaxform[property];                                            
-                        if (-1 !== property.indexOf('[]')) {
-                            var values = data[property].toString().split(',');
-                            $("option", $(elem)).each(function( index ) {
-                                for (var i = 0; i < values.length; i++) {
-                                    if (this.value == values[i]) {
-                                        this.selected = true;
-                                        selectElem.push(this);                                    
-                                    } 
-                                }                            
-                            });
-                        } else {                        
-                            elem.value = data[property];
-                            fields.push(property);
-                        }                        
-                    }
-                    //Цепляем слушателя на отправку формы
-                    $(ajaxform).submit(processingForm);
-                    cancel.disabled = false;
-                    formButton.disabled = false;
-                },
-                error: function(result) {
-                    $(cancel).click();
-                    flashMessage(mess, 'AJAX error', '');
-                    console.log(result.responseText);
+    var parentTr = $(target).parents("tr")[0];
+    var id = $(target)[0].dataset.id || 0;        
+    if (isFinite(id)) {
+        $.ajax({
+            type: "POST",            
+            url: url, 
+            data: {id: id},
+            success: function(result){
+                try {
+                    var data = JSON.parse(result);                    
+                } catch (er) {                        
+                    flashMessage(mess, 'Error JSON', '');                        
+                    $(cancel).click(); 
+                    return;
                 }
-            });
-        }        
+                if (data.error && !data.formData) {
+                    flashMessage(mess, data.error, '');                        
+                    $(cancel).click();
+                    return;
+                }                                               
+                var formData = data.formData;                    
+                //заполняем форму полученными данными
+                for (var property in formData) {                    
+                    var elem = ajaxform[property];
+                    var values = formData[property];
+                    if (!values) {
+                        break; 
+                    }                                                                                                               
+                    if (-1 !== property.indexOf('[]')) {
+                        $(elem).children().remove();
+                        if (values.length > 0) {
+                            values.forEach(function(item, i, arr) {
+                                var option = document.createElement('option');
+                                var $_option = $(option); 
+                                $_option.val(item['value']);
+                                $_option.text(item['label']);
+                                $_option.prop('selected', item['selected']);
+                                $(elem).append($_option);
+                            });
+                        }                        
+                    } else {                        
+                        elem.value = formData[property];
+                        fields.push(property);
+                    }                        
+                }
+                //Цепляем слушателя на отправку формы
+                $(ajaxform).submit(processingForm);
+                cancel.disabled = false;
+                formButton.disabled = false;
+            },
+            error: function(result) {
+                $(cancel).click();
+                flashMessage(mess, 'AJAX error', '');
+                console.log(result.responseText);
+            }
+        });
     } else {
-        //Цепляем слушателя на отправку формы
-        $(ajaxform).submit(processingForm);
-        cancel.disabled = false;
-        formButton.disabled = false;
+        $(cancel).click();
+        flashMessage(mess, 'Error. Id not found.', '');
     }
 
     function processingForm(event) {
@@ -212,18 +212,42 @@ function handleForm(event) {
                     $(cancel).click();
                     return;
                 }                
-                cancel.disabled = false;
-                formButton.disabled = false;                
+                var formData = data.formData;                    
+                //заполняем форму полученными данными
+                for (var property in formData) {                    
+                    var elem = ajaxform[property];
+                    var values = formData[property];
+                    if (!values) {
+                        break; 
+                    }                                                                                           
+                    if (-1 !== property.indexOf('[]')) {
+                        $(elem).children().remove();
+                        if (values.length > 0) {
+                            values.forEach(function(item, i, arr) {
+                                var option = document.createElement('option');
+                                var $_option = $(option); 
+                                $_option.val(item['value']);
+                                $_option.text(item['label']);
+                                $_option.prop('selected', item['selected']);
+                                $(elem).append($_option);
+                            });
+                        }                        
+                    } else {                        
+                        elem.value = values;
+                        fields.push(property);
+                    }                        
+                }                                
                 flashMessage($('[name="message"]', $(ajaxform)), data.error.descr, '');
                 //Подробная информация об ошибках формы
                 var errorDatails = data.error.details;                
                 for (var property in errorDatails) {                    
                     errorDatails[property].forEach(function(item, i, arr) {                        
-                        var selector = "dd>input[name='" + property + "']";
+                        var selector = "[name='" + property + "']";                        
                         addError($(selector.toString(), $(ajaxform)), item);
                     });                    
                 }
-
+                cancel.disabled = false;
+                formButton.disabled = false;
             },
             error: function(result){
                 console.log(result.responseText);
@@ -299,6 +323,9 @@ function deleteAction(e) {
                     return;                                                                
                 } 
                 if ('error' in data) {
+                    if (parentTr !== undefined &&  -1 !== data['error'].indexOf('not found')) {
+                        $(parentTr).remove();
+                    }
                     flashMessage(mess, data['error'], '');
                     cancel.disabled = false;
                     $(cancel).click();
@@ -340,8 +367,15 @@ function editBookLine(target, data, isEdit) {
     var title = $('td[name="title"]', $(target))[0];      
     $('a', $(title))[0].dataset.id = data['id'];
     $('a', $(title)).attr('href', data['title']['href']).text('').text(data['title']['title']);
-    var author = $('td[name="author"]', $(target));    
-    $('a', $(author)).attr('href', data['author']['href']).text('').text(data['author']['value']);    
+    /*var author = $('td[name="author"]', $(target));    
+    $('a', $(author)).attr('href', data['author']['href']).text('').text(data['author']['value']);*/
+    var dataAuthor = data['author'];
+    $('td[name="author"]', $(target)).text('');
+    for (var property in dataAuthor) {
+        var a = document.createElement('a');
+        $(a).attr('href', dataAuthor[property]['href']).text('').text(dataAuthor[property]['value']);
+        $('td[name="author"]', $(target)).append(a);
+    }
     var dataRubric = data['rubric'];
     $('td[name="rubric"]', $(target)).text('');
     for (var property in dataRubric) {

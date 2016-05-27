@@ -10,14 +10,4 @@ $this->form->setAttribute('method', 'post');
 echo $this->partial('authorform.phtml', array('form' => $this->form,));
 ?>
 
-<script>
-    var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
-    var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
-    var mess = $('#flashMessage');
-
-    
-
-    $(document).ready(function() {               
-        flashMessage(mess, error, success);        
-    });
-</script>
+<?php echo $this->partial('message-script.phtml', array('message' => $this->message,)); ?>

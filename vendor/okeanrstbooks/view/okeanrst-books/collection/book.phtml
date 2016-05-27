@@ -10,10 +10,12 @@
     <dd><img src="<?php echo $this->entity->getPhotofile()->getPath() ?>" alt="Books photo"></dd>
     
     
-    <dt><label for="author"><?php echo $this->translate('Author:') ?></label></dt>
-    <dd><a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $this->entity->getAuthor()->getId())) ?>" >
-    	<?php echo $this->entity->getAuthor()->getLastName().' '.$this->entity->getAuthor()->getName() ?></a></dd>
-    
+    <dt><label for="author"><?php echo $this->translate('Author:') ?></label></dt>    
+    <dd><ul><?php foreach ($this->entity->getAuthor() as $author): ?>
+        <li><a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $author->getId())) ?>" >
+            <?php echo $author->getLastName().' '.$author->getName() ?></a></li>
+            <?php endforeach; ?>
+    </ul></dd>
     
     <dt><label for="rubric"><?php echo $this->translate('Rubric:') ?></label></dt>
     <dd><ul><?php foreach ($this->entity->getRubric() as $rubric): ?>

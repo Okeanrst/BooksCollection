@@ -17,8 +17,12 @@
             <tr>
                 <td name="num"><?php echo $i++;?></td>
                 <td name="title"><a data-id="<?php echo $book->getId()?>" href="<?php echo $this->url('books/book', array('id' => $book->getId())) ?>" ><?php echo $book->getTitle(); ?></a></td>
-                <td name="author"><a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $book->getAuthor()->getId())) ?>" >
-                    <?php echo $book->getAuthor()->getLastName().' '.$book->getAuthor()->getName() ?></a></td>
+                <td name="author">
+                    <?php foreach ($book->getAuthor() as $author): ?>
+                    <a href="<?php echo $this->url('books/getbooksbyauthor', array('id' => $author->getId())) ?>" >
+                    <?php echo $author->getLastName().' '.$author->getName() ?></a>,
+                    <?php endforeach; ?>
+                </td>
                 <td name="rubric">   
                     
                     <?php //var_dump($book->getRubric()) ?>

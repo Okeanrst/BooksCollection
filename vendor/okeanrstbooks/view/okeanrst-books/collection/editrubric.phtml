@@ -11,11 +11,4 @@ echo $this->partial('rubricform.phtml', array('form' => $this->form,));
 ?>
 
 
-<script>
-    $(document).ready(function() {        
-        var error = '<?php echo $this->translate($this->flashMessenger()->render('error')) ?>';
-        var success = '<?php echo $this->translate($this->flashMessenger()->render('success')) ?>';        
-        var mess = $('#flashMessage');        
-
-    });
-</script>
+<?php echo $this->partial('message-script.phtml', array('message' => $this->message,)); ?>

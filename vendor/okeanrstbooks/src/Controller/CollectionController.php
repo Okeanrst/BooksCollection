@@ -165,7 +165,7 @@ class CollectionController extends AbstractActionController
     {
         $this->checkAccess();               
         $view =  new ViewModel();
-        $message = ['success' => '', 'error' => ''];
+        $message = [];
         $request = $this->getRequest();
         if ($request->isPost()) {             
             $form = new BookForm($this->em);
@@ -212,24 +212,18 @@ class CollectionController extends AbstractActionController
                 $request->getFiles()->toArray()
             );
             $form->setData($post);
+            $book = new Book();
             if ($form->isValid()) {    
-                $data = $form->getData();                           
-                $book = new Book();
+                $data = $form->getData();
                 $this->collection->addBook($book, $data);                
                 $data = $this->prepareBookLine($book);
                 return $response->setContent(Json::encode(['success' => 'The book has been added', 'formData' => $data]));                                              
             }
-            $formData = $form->getData();
-            $this->deleteInvalidFile($formData);
-            $formErrors = [];
-            $translate = $this->viewHelperManager->get('translate');
-            $escapeHtml = $this->viewHelperManager->get('escapehtml');
-            foreach ($form as $element) {
-                array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
-                    $formErrors[$element->getName()][] = $escapeHtml($item);
-                });
-            }
-            return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
+            $data = $form->getData();
+            $this->deleteInvalidFile($data);
+            $form->bind($book);                
+            $extractForm = $this->extractForm($form);            
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $extractForm['formErrors']], 'formData' => $extractForm['formData']]));
         }        
         return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
     }
@@ -272,10 +266,16 @@ class CollectionController extends AbstractActionController
                 $this->flashMessenger()->addSuccessMessage('The book was edited');         
                 return $this->redirect()->toRoute('books/collection');                
             } else {
-                $data = $form->getData();
-                $this->deleteInvalidFile($data);
-                $this->flashMessenger()->addErrorMessage('Data is not valid');
-                return $this->redirect()->toRoute('books/editbook', ['id' => $id]);                
+                $data = $form->getData();                
+                $this->deleteInvalidFile($data);                
+                $message['error'] = 'Data is not valid';
+                $newform = new BookForm($this->em);
+                $newform->setData($data);
+                $view->message = $message;
+                $newform->get('photofile')->setAttribute('required', '');
+                $newform->get('bookfile')->setAttribute('required', '');
+                $view->form = $newform;                
+                return $view;                
             }            
         }        
         $id = $this->params()->fromRoute('id');
@@ -344,21 +344,9 @@ class CollectionController extends AbstractActionController
             } else {
                 $data = $form->getData();
                 $this->deleteInvalidFile($data);
-                $form->bind($book);
-                $formData = ['id' => $form->get('id')->getValue(),
-                    'title' => $form->get('title')->getValue(),
-                    'author' => $form->get('author')->getValue(),
-                    'rubric[]' => $form->get('rubric')->getValue()
-                ];
-                $formErrors = [];
-                $translate = $this->viewHelperManager->get('translate');
-                $escapeHtml = $this->viewHelperManager->get('escapehtml');
-                foreach ($form as $element) {
-                    array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
-                        $formErrors[$element->getName()][] = $escapeHtml($item);
-                    });
-                }
-                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
+                $form->bind($book);                
+                $extractForm = $this->extractForm($form);                
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $extractForm['formErrors']], 'formData' => $extractForm['formData']]));
             }                
         }        
         return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
@@ -426,8 +414,7 @@ class CollectionController extends AbstractActionController
     public function newAuthorAction()
     {
         $this->checkAccess();
-        $view =  new ViewModel();
-        $message = ['success' => '', 'error' => ''];                
+        $view =  new ViewModel();                        
         if ($this->getRequest()->isPost()) {
             $form = new AuthorForm($this->em);
             $entity = new Author();       
@@ -449,8 +436,7 @@ class CollectionController extends AbstractActionController
         $form = new AuthorForm($this->em);
         $submit = $form->get('submit');
         $submit->setValue('Add author');
-        $view->form = $form;
-        $view->message = $message;
+        $view->form = $form;        
         return $view;
     }
 
@@ -471,20 +457,9 @@ class CollectionController extends AbstractActionController
                 $this->collection->save($author);
                 $data = $this->prepareAuthorLine($author);                                      
                 return $response->setContent(Json::encode(['success' => 'The author has been successfully added', 'formData' => $data]));
-            } else {                    
-                $formData = [
-                    'lastName' => $form->get('lastName')->getValue(),
-                    'name' => $form->get('name')->getValue()
-                ];
-                $formErrors = [];
-                $translate = $this->viewHelperManager->get('translate');
-                $escapeHtml = $this->viewHelperManager->get('escapehtml');
-                foreach ($form as $element) {
-                    array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
-                        $formErrors[$element->getName()][] = $escapeHtml($item);
-                    });
-                }                
-                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
+            } else {
+                $extractForm = $this->extractForm($form);
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $extractForm['formErrors']], 'formData' => $extractForm['formData']]));
             }                     
         }        
         return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
@@ -492,7 +467,7 @@ class CollectionController extends AbstractActionController
     
     public function editAuthorAction()
     {
-        $this->checkAccess();
+        $this->checkAccess();        
         $view =  new ViewModel();
         $form = new AuthorForm($this->em);
         if ($this->getRequest()->isPost()) {
@@ -514,8 +489,10 @@ class CollectionController extends AbstractActionController
                 $this->flashMessenger()->addSuccessMessage('The author has been edited');                   
                 return $this->redirect()->toRoute('books/authors');                
             } else {
-                $this->flashMessenger()->addErrorMessage('Error editing author. Data is not valid');
-                return $this->redirect()->toRoute('books/editauthor', ['id' => $id]);                                                
+                $message['error'] = 'Data is not valid';
+                $view->message = $message;
+                $view->form = $form;        
+                return $view;
             }
         }
         $id = $this->params()->fromRoute('id');
@@ -531,7 +508,7 @@ class CollectionController extends AbstractActionController
         $form->bind($author);
         $submit = $form->get('submit');
         $submit->setValue('Edit author');                
-        $view->form = $form;      
+        $view->form = $form;              
         return $view;
     }
 
@@ -557,22 +534,9 @@ class CollectionController extends AbstractActionController
                     $this->collection->save($author);
                     $data = $this->prepareAuthorLine($author);                                       
                     return $response->setContent(Json::encode(['success' => 'The author has been edited', 'formData' => $data]));
-                } else {                    
-                    $formData = ['id' => $form->get('id')->getValue(),
-                        'lastName' => $form->get('lastName')->getValue(),
-                        'name' => $form->get('name')->getValue()
-                    ];
-                    $formErrors = [];
-                    $translate = $this->viewHelperManager->get('translate');
-                    $escapeHtml = $this->viewHelperManager->get('escapehtml');
-                    foreach ($form as $element) {
-                        array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
-                            $formErrors[$element->getName()][] = $escapeHtml($item);
-                        });
-                    }
-                    return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));                    
-                }          
-                
+                }                     
+                $extractForm = $this->extractForm($form);
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $extractForm['formErrors']], 'formData' => $extractForm['formData']])); 
             } else {
                 return $response->setContent(Json::encode(['error' => ['descr' => 'author not found']]));
             }            
@@ -643,8 +607,7 @@ class CollectionController extends AbstractActionController
     public function newRubricAction()
     {
         $this->checkAccess();                
-        $view =  new ViewModel();
-        $message = ['success' => '', 'error' => ''];
+        $view =  new ViewModel();        
         if ($this->getRequest()->isPost()) {
             $form = new RubricForm($this->em);
             $entity = new Rubric();       
@@ -666,8 +629,7 @@ class CollectionController extends AbstractActionController
         $form = new RubricForm($this->em);
         $submit = $form->get('submit');
         $submit->setValue('Add rubric');
-        $view->form = $form;
-        $view->message = $message;
+        $view->form = $form;        
         return $view;
     }
 
@@ -688,28 +650,16 @@ class CollectionController extends AbstractActionController
                 $this->collection->save($rubric);                                       
                 $data = $this->prepareRubricLine($rubric);
                 return $response->setContent(Json::encode(['success' => 'Rubric has been added', 'formData' => $data]));
-            } else {                    
-                $formData = [
-                    'Title' => $form->get('title')->getValue()
-                ];
-                $formErrors = [];
-                $translate = $this->viewHelperManager->get('translate');
-                $escapeHtml = $this->viewHelperManager->get('escapehtml');
-                foreach ($form as $element) {
-                    array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
-                        $formErrors[$element->getName()][] = $escapeHtml($item);
-                    });
-                }
-                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
-            }                     
+            } 
+            $extractForm = $this->extractForm($form);
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $extractForm['formErrors']], 'formData' => $extractForm['formData']]));
         }        
         return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
-
     }
     
     public function editRubricAction()
     {
-        $this->checkAccess();
+        $this->checkAccess();        
         $id = (int) $this->params()->fromRoute('id');
         if (!$id) {
             return $this->redirect()->toRoute('books/rubrics');
@@ -718,7 +668,7 @@ class CollectionController extends AbstractActionController
         if (!$author) {
             return $this->redirect()->toRoute('books/rubrics');
         }
-        $form = new AuthorForm($this->em);
+        $form = new RubricForm($this->em);
         $form->bind($author);
         if ($this->getRequest()->isPost()) {
             $post = $this->getRequest()->getPost();
@@ -735,13 +685,15 @@ class CollectionController extends AbstractActionController
                     return $this->redirect()->toRoute('books/rubrics');
                 }
             } else {
-                $this->flashMessenger()->addErrorMessage('Error editing rubric. Data is not valid');                
+                $message['error'] = 'Data is not valid';
+                $view->message = $message;
+                $view->form = $form;        
+                return $view;
             }
         }
         $view =  new ViewModel();
-        $view->form = $form;        
+        $view->form = $form;                
         return $view;
-
     }
 
     public function ajaxEditRubricAction()
@@ -766,20 +718,9 @@ class CollectionController extends AbstractActionController
                     $this->collection->save($rubric);
                     $data = $this->prepareRubricLine($rubric);                                      
                     return $response->setContent(Json::encode(['success' => 'Rubric has been editing', 'formData' => $data]));
-                } else {                    
-                    $formData = ['id' => $form->get('id')->getValue(),
-                        'title' => $form->get('title')->getValue()                        
-                    ];
-                    $formErrors = [];
-                    $translate = $this->viewHelperManager->get('translate');
-                    $escapeHtml = $this->viewHelperManager->get('escapehtml');
-                    foreach ($form as $element) {
-                        array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $element) {
-                            $formErrors[$element->getName()][] = $escapeHtml($item);
-                        });
-                    }
-                    return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $formErrors], 'formData' => $formData]));
-                }                
+                } 
+                $extractForm = $this->extractForm($form);
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Data is not valid', 'details' => $extractForm['formErrors']], 'formData' => $extractForm['formData']]));
             } else {
                 return $response->setContent(Json::encode(['error' => ['descr' => 'Rubric not found']]));
             }            
@@ -866,12 +807,16 @@ class CollectionController extends AbstractActionController
         $urlHelper = $this->viewHelperManager->get('url');
         $data = [];
         $data['id'] = $book->getId();
-        $data['title'] = ['href' => $urlHelper('books/book', ['id' => $book->getId()]), 'title' => $book->getTitle()];        
-        $author = $book->getAuthor()->getLastName().' '.$book->getAuthor()->getName();
-        $data['author'] = ['href' => $urlHelper('books/getbooksbyauthor', ['id' => $book->getId()]), 'value' => $author];
+        $data['title'] = ['href' => $urlHelper('books/book', ['id' => $book->getId()]), 'title' => $book->getTitle()];
+        $author = [];
+        foreach ($book->getAuthor() as $auth) {
+            $value = $auth->getLastName().' '.$auth->getName();
+            array_push($author, ['href' => $urlHelper('books/getbooksbyauthor', ['id' => $auth->getId()]), 'value' => $value.', ']);
+        }
+        $data['author'] = $author;
         $rubric = [];
         foreach ($book->getRubric() as $rub) {
-            array_push($rubric, ['href' => $urlHelper('books/rubrics', ['id' => $rub->getId()]), 'value' => $rub->getTitle().', ']);
+            array_push($rubric, ['href' => $urlHelper('books/getbooksbyrubric', ['id' => $rub->getId()]), 'value' => $rub->getTitle().', ']);
         }
         $data['rubric'] = $rubric;
         $data['img'] = $book->getPhotofile()->getPath();
@@ -912,11 +857,53 @@ class CollectionController extends AbstractActionController
                 @unlink($pathPhoto);
             }
         }
+        if(isset($data['photofile'])) {
+            unset($data['photofile']);
+        }
         if(isset($data['bookfile']['tmp_name'])) {
             $pathBook = str_replace('\\', '/', $data['bookfile']['tmp_name']);
             if (file_exists($pathBook)) {
                 @unlink($pathBook);
             }
         }
+        if(isset($data['bookfile'])) {
+            unset($data['bookfile']);
+        }
+    }
+
+    private function extractForm($form)
+    {
+        $translate = $this->viewHelperManager->get('translate');
+        $escapeHtml = $this->viewHelperManager->get('escapehtml');
+        $formData = [];
+        $formErrors = [];
+        foreach ($form as $element) {
+            $elemType = $element->getAttribute('type');
+            $fieldName = $element->getName();
+            if (($elemType === 'select' && $element->isMultiple()) || $elemType === 'radio' || $elemType === 'multi_checkbox') {
+                $name = $element->getName().'[]';
+                $values = $form->get($fieldName)->getValue();
+                $value = [];
+                foreach ($form->get($fieldName)->getValueOptions() as $key => $option) {
+                    $selected = false;                    
+                    if (is_array($option)) {
+                        if (in_array($option['value'], $values)) {
+                            $selected = true;
+                        }
+                        $value[] = ['value' => $option['value'], 'selected' => $selected, 'label' => $option['label']];
+                    } else {
+                        $value[] = ['value' => '', 'selected' => false, 'label' => '---'];
+                    }                    
+                }                    
+            } else {
+                $name = $element->getName();
+                $value = $form->get($name)->getValue();
+            }
+            $formData[$name] = $value;
+            array_walk_recursive($element->getMessages(), function ($item) use (&$formErrors, $escapeHtml, $translate, $name) {
+                $formErrors[$name][] = $escapeHtml($translate($item));                
+            });
+        }
+        return ['formData' => $formData, 'formErrors' => $formErrors];        
     }
 }   

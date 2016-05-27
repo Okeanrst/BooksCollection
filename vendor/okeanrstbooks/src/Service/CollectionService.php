@@ -4,6 +4,8 @@ namespace OkeanrstBooks\Service;
 
 use Zend\Paginator\Adapter\ArrayAdapter;
 use Zend\Paginator\Paginator;
+use DoctrineModule\Stdlib\Hydrator\DoctrineObject as DoctrineHydrator;
+use Doctrine\Common\Collections\ArrayCollection;
 
 class CollectionService
 {
@@ -68,12 +70,14 @@ class CollectionService
 
     public function getBooksByAuthorId($id)
     {
-        return $this->mapper->getBooksByAuthor((int) $id);
+        //$author = $this->mapper->getAuthorById($id);
+        //return $this->mapper->getBooksByAuthor($author);
+        return $this->mapper->getBooksByAuthorId((int) $id);
     }
     
     public function getBooksByAuthorPaginator($id, $page = 1, $itemCount = 5)
     {
-        $result = $this->getBooksByAuthor($id);
+        $result = $this->getBooksByAuthorId($id);
         if ($result) {
             return $this->getPaginator($result, $page, $itemCount);
         }
@@ -95,9 +99,7 @@ class CollectionService
     }
     
     public function addBook(\OkeanrstBooks\Entity\Book $book, $data)
-    {        
-        $this->hydrateBook($book, $data);       
-        
+    {
         $photofile = new \OkeanrstBooks\Entity\Filephoto();
         $bookfile = new \OkeanrstBooks\Entity\Filebook();                   
 
@@ -137,14 +139,22 @@ class CollectionService
         $book->setPhotofile($photofile);
         $book->setBookfile($bookfile);
 
+        if (isset($data['photofile'])) {
+            unset($data['photofile']);
+        }
+        if (isset($data['bookfile'])) {
+            unset($data['bookfile']);
+        }
+
+        $this->hydrateBook($book, $data);
+
         $this->mapper->save($book);
     }
 
     public function editBook(\OkeanrstBooks\Entity\Book $book, $data)
     {       
         $photofile = $book->getPhotofile();
-        $bookfile = $book->getBookfile();
-        $this->hydrateBook($book, $data);
+        $bookfile = $book->getBookfile();        
 
         if (isset($data['photofile']) && $data['photofile']['tmp_name']) {
             $pathPhoto = str_replace('\\', '/', $data['photofile']['tmp_name']);
@@ -157,7 +167,8 @@ class CollectionService
             $photofile->setPath($pathPhoto);
             $photofile->setName($namePhoto);
             $photofile->setSize($data['photofile']['size']);
-            $photofile->setMimeType($photoType);            
+            $photofile->setMimeType($photoType);
+            unset($data['photofile']);                      
         }
 
         
@@ -171,23 +182,33 @@ class CollectionService
             $bookfile->setPath($pathBook);
             $bookfile->setName($nameBook);
             $bookfile->setSize($data['bookfile']['size']);
-            $bookfile->setMimeType($bookType);            
-        }        
+            $bookfile->setMimeType($bookType);
+            unset($data['bookfile']);
+        }
+
+        $this->hydrateBook($book, $data);        
 
         $this->mapper->save($book);        
     }
 
     public function deleteBook(\OkeanrstBooks\Entity\Book $book)
     {        
+        $authors = $book->getAuthor();
+        $collectionBooks = new ArrayCollection();
+        $collectionBooks->add($book);
+        foreach ($authors as $author) {            
+            $author->removeBook($collectionBooks);
+        }
         $this->mapper->delete($book);
     }
 
     public function deleteAuthor(\OkeanrstBooks\Entity\Author $author)
-    {
-        $authorId = $author->getId();
-        $books = $this->mapper->getBooksByAuthorId($authorId);
+    {        
+        $books = $author->getBook();
+        $collectionAuthors = new ArrayCollection();
+        $collectionAuthors->add($author);
         foreach ($books as $book) {            
-            $this->mapper->delete($book);
+            $book->removeAuthor($collectionAuthors);
         }
         $this->mapper->delete($author);
     }
@@ -196,8 +217,10 @@ class CollectionService
     {
         $rubricId = $rubric->getId();
         $books = $this->mapper->getBooksByRubricId($rubricId);
+        $collectionRubrics = new ArrayCollection();
+        $collectionRubrics->add($rubric);
         foreach ($books as $book) {
-            $book->removeRubric($rubric);
+            $book->removeRubric($collectionRubrics);
         }
         $this->mapper->delete($rubric);
     }
@@ -227,7 +250,7 @@ class CollectionService
 
     private function hydrateBook(\OkeanrstBooks\Entity\Book $book, array $data)
     {
-        $curRubricsId = [];
+        /*$curRubricsId = [];
         $newRubricsId = [];
         foreach ($book->getRubric() as $curRubric) {
             array_push($curRubricsId, $curRubric->getId());
@@ -251,12 +274,29 @@ class CollectionService
             }
         }        
 
-        $author = $this->getAuthorById((int) $data['author']);        
-        if (is_a($author, 'OkeanrstBooks\Entity\Author')) {
-            $book->setAuthor($author);
+        $curAuthorsId = [];
+        $newAuthorsId = [];
+        foreach($data['author'] as $key => $authorId) {            
+            $authorId = (int) $authorId;
+            array_push($newAuthorsId, $authorId); 
+            if (!in_array ($authorId, $curAuthorsId, true) ) {
+                $author = $this->getAuthorById($authorId);
+                if (is_a($author, 'OkeanrstBooks\Entity\Author')) {
+                    $book->addAuthor($author);
+                } 
+            }                   
+        }
+
+        foreach ($book->getAuthor() as $curAuthor) {
+            $curAuthorId = $curAuthor->getId();
+            if (!in_array ($curAuthorId, $newAuthorsId, true)) {
+                $book->removeAuthor($curAuthor);
+            }
         }
         
-        $book->setTitle($data['title']);
+        $book->setTitle($data['title']);*/
+        $objectManager = $this->mapper->getEntityManager();
+        (new DoctrineHydrator($objectManager))->hydrate($data, $book);
     }
 
 }

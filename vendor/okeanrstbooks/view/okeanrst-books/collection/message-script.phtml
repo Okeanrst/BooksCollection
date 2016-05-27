@@ -1,0 +1,17 @@
+<script>
+    var error = '<?php if(isset($this->message['error'])) {
+    		echo $this->translate($this->message['error']);
+    	} else {
+    		echo '';
+    	} ?>';
+    var success = '<?php if(isset($this->message['success'])) {
+    		echo $this->translate($this->message['success']);
+    	} else {
+    		echo '';
+    	} ?>';        
+    var mess = $('#flashMessage');
+
+    $(document).ready(function() {               
+        flashMessage(mess, error, success);        
+    });    
+</script>

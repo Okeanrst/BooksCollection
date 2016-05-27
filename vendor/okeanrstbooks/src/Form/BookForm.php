@@ -47,25 +47,18 @@ class BookForm extends Form
             ),           
         ));
         
-        $this->add(array(
-            'name' => 'author',
-            'type'  => 'text',            
-            'attributes' => array(
-                'required' => 'required',
-            ),
-        ));
-        
         $this->add(
             array(
                 'type' => 'DoctrineModule\Form\Element\ObjectSelect',
                 'name' => 'author',
                 'attributes' => array(
-                    'required' => true,                    
+                    'required' => true,
+                    'multiple' => true,                    
                 ),
                 'options' => array(
                     'object_manager'     => $this->objectManager,
                     'target_class'       => 'OkeanrstBooks\Entity\Author',
-                    'property'           => 'lastName',
+                    //'property'           => 'lastName',
                     'display_empty_item' => true,
                     'empty_item_label'   => '---',
                     'label_generator' => function($targetEntity) {
@@ -80,15 +73,18 @@ class BookForm extends Form
                 'type' => 'DoctrineModule\Form\Element\ObjectSelect',
                 'name' => 'rubric',
 				'attributes' => array(
-                    'required' => false,
+                    'required' => true,
                     'multiple' => true,                    
                 ),
                 'options' => array(
                     'object_manager'     => $this->objectManager,
                     'target_class'       => 'OkeanrstBooks\Entity\Rubric',
-                    'property'           => 'title',
+                    //'property'           => 'title',
                     'display_empty_item' => true,
-                    'empty_item_label'   => '---',					
+                    'empty_item_label'   => '---',
+                    'label_generator' => function($targetEntity) {
+                        return $targetEntity->getTitle();
+                    },					
                 ),
             )
         );        
@@ -162,19 +158,17 @@ class BookForm extends Form
                 'name'     => 'author',
                 'required' => true,
                 'filters'  => array(
-                    array('name' => 'StripTags'),
-                    array('name' => 'StringTrim'),
+                    array('name' => 'Int'),
                 ),
                 'validators' => array(
                     array(
-                        'name'    => 'StringLength',
+                        'name' => 'DoctrineModule\Validator\ObjectExists',
                         'options' => array(
-                            'encoding' => 'UTF-8',
-                            'min'      => 1,
-                            'max'      => 64,
-                        ),
-                    ),
-                ),
+                            'object_repository' => $this->objectManager->getRepository('OkeanrstBooks\Entity\Author'),
+                            'fields' => 'id'
+                        )
+                    )
+                )                
             ));
 
             $inputFilter->add(array(
@@ -182,7 +176,16 @@ class BookForm extends Form
                 'required' => true,
                 'filters'  => array(
                     array('name' => 'Int'),
-                ),                
+                ),
+                'validators' => array(
+                    array(
+                        'name' => 'DoctrineModule\Validator\ObjectExists',
+                        'options' => array(
+                            'object_repository' => $this->objectManager->getRepository('OkeanrstBooks\Entity\Rubric'),
+                            'fields' => 'id'
+                        )
+                    )
+                )                
             ));
             
             $inputFilter->add(array(
@@ -263,7 +266,7 @@ class BookForm extends Form
             
 
             $this->inputFilter = $inputFilter;
-        }
+        }        
 
         return $this->inputFilter;
     }

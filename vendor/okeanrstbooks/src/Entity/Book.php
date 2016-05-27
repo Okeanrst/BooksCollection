@@ -3,6 +3,8 @@
 namespace OkeanrstBooks\Entity;
  
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Zend\InputFilter\InputFilter;
 use Zend\InputFilter\Factory as InputFactory;
 use Zend\InputFilter\InputFilterAwareInterface;
@@ -54,11 +56,9 @@ class Book
     /**
      * @var \OkeanrstBooks\Entity\Author
      *
-     * @ORM\ManyToOne(targetEntity="OkeanrstBooks\Entity\Author")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="author_id", referencedColumnName="id", nullable=false, onDelete="CASCADE")
-     * })
-     */
+     * @ORM\ManyToMany(targetEntity="OkeanrstBooks\Entity\Author", inversedBy="book")
+     * @ORM\JoinTable(name="books_authors")
+     */        
     private $author;
 
     /**
@@ -77,7 +77,8 @@ class Book
      */
     public function __construct()
     {
-        $this->rubric = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->rubric = new ArrayCollection();
+        $this->author = new ArrayCollection();
     }
 
     /**
@@ -141,13 +142,15 @@ class Book
     /**
      * Add rubric
      *
-     * @param \OkeanrstBooks\Entity\Rubric $rubric
+     * @param \Doctrine\Common\Collections\Collection $rubrics
      *
      * @return Book
      */
-    public function addRubric(\OkeanrstBooks\Entity\Rubric $rubric)
+    public function addRubric(Collection $rubrics)
     {
-        $this->rubric[] = $rubric;
+        foreach ($rubrics as $rubric) {            
+            $this->rubric->add($rubric);
+        }        
 
         return $this;
     }
@@ -155,11 +158,13 @@ class Book
     /**
      * Remove rubric
      *
-     * @param \OkeanrstBooks\Entity\Rubric $rubric
+     * @param \Doctrine\Common\Collections\Collection $rubrics
      */
-    public function removeRubric(\OkeanrstBooks\Entity\Rubric $rubric)
+    public function removeRubric(Collection $rubrics)
     {
-        $this->rubric->removeElement($rubric);
+        foreach ($rubrics as $rubric) {            
+            $this->rubric->removeElement($rubric);
+        }        
     }
 
     /**
@@ -173,28 +178,48 @@ class Book
     }
 
     /**
-     * Set author
+     * Add author
      *
-     * @param \OkeanrstBooks\Entity\Author $author
+     * @param \Doctrine\Common\Collections\Collection $authors
      *
      * @return Book
      */
-    public function setAuthor(\OkeanrstBooks\Entity\Author $author)
+    public function addAuthor(Collection $authors)
     {
-        $this->author = $author;
+        foreach ($authors as $author) {
+            $collectionBooks = new ArrayCollection();
+            $collectionBooks->add($this);
+            $author->addBook($collectionBooks);
+            $this->author->add($author);
+        }        
 
         return $this;
     }
 
     /**
+     * Remove author
+     *
+     * @param \Doctrine\Common\Collections\Collection $authors
+     */
+    public function removeAuthor(Collection $authors)
+    {
+        foreach ($authors as $author) {
+            $collectionBooks = new ArrayCollection();
+            $collectionBooks->add($this);
+            $author->removeBook($collectionBooks);
+            $this->author->removeElement($author);
+        }
+    }
+
+    /**
      * Get author
      *
-     * @return \OkeanrstBooks\Entity\Author
+     * @return \Doctrine\Common\Collections\Collection
      */
     public function getAuthor()
     {
         return $this->author;
-    }
+    }    
 
     /**
      * Set bookfile

@@ -12,16 +12,4 @@ echo $this->partial('bookform.phtml', array('form' => $this->form,));
 ?>
 
 
-<script>
-    $(document).ready(function() {
-               
-        var error = '<?php echo $this->translate($this->message['error']) ?>';
-        var success = '<?php echo $this->translate($this->message['sucess']) ?>';        
-        var mess = $('#flashMessage');
-
-        $(document).ready(function() {               
-            flashMessage(mess, error, success);        
-        });       
-
-    });
-</script>
+<?php echo $this->partial('message-script.phtml', array('message' => $this->message,)); ?>

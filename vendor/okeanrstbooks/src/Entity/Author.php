@@ -3,6 +3,7 @@
 namespace OkeanrstBooks\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * Author
@@ -34,6 +35,21 @@ class Author
      * @ORM\Column(name="name", type="string", length=64, precision=0, scale=0, nullable=false, unique=false)
      */
     private $name;
+
+    /**
+     * @var \OkeanrstBooks\Entity\Book
+     *
+     * @ORM\ManyToMany(targetEntity="OkeanrstBooks\Entity\Book", mappedBy="author")     
+     */        
+    private $book;
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->book = new \Doctrine\Common\Collections\ArrayCollection();        
+    }
 
 
     /**
@@ -92,6 +108,44 @@ class Author
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Add book
+     *
+     * @param \Doctrine\Common\Collections\Collection $books
+     *
+     * @return Author
+     */
+    public function addBook(Collection $books)
+    {        
+        foreach ($books as $book) {            
+            $this->book->add($book);
+        }        
+
+        return $this;
+    }
+
+    /**
+     * Remove book
+     *
+     * @param \Doctrine\Common\Collections\Collection $books
+     */
+    public function removeBook(Collection $books)
+    {        
+        foreach ($books as $book) {            
+            $this->book->removeElement($book);
+        }        
+    }
+
+    /**
+     * Get book
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBook()
+    {
+        return $this->book;
     }
 }
 
