@@ -90,3 +90,6 @@ div.container a.brand {
   min-width: 70px;
 }
 
+dd > input[type="text"], dd > select {
+  width: 200px;
+}

@@ -392,23 +392,23 @@ class CollectionController extends AbstractActionController
     {
         $response = $this->getResponse();
         if(!$this->ajaxCheckAccess()) {
-            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Error. Access is denied!']]));
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
             $id = (int) $request->getPost('id');            
             if (!$id) {
-                return $response->setContent(Json::encode(array('error' => 'Id not found in request')));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Id not found in request']]));
             }
             $book = $this->collection->getBookById($id);
             if ($book) {                   
                 $this->collection->deleteBook($book);                                        
                 return $response->setContent(Json::encode(array('success' => 'The book has been removed.')));
             } else {
-                return $response->setContent(Json::encode(array('error' => 'Book not found')));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Book not found']]));
             }            
         }        
-        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
+        return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
     }
     
     public function newAuthorAction()
@@ -585,23 +585,23 @@ class CollectionController extends AbstractActionController
     {
         $response = $this->getResponse();
         if(!$this->ajaxCheckAccess()) {
-            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Error. Access is denied!']]));
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
             $id = (int) $request->getPost('id');            
             if (!$id) {
-                return $response->setContent(Json::encode(array('error' => 'Id not found in request')));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Id not found in request']]));
             }
             $author = $this->collection->getAuthorById($id);
             if ($author) {                   
                 $this->collection->deleteAuthor($author);                                        
                 return $response->setContent(Json::encode(array('success' => 'The author has been deleted')));
             } else {
-                return $response->setContent(Json::encode(array('error' => 'Author not found')));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Author not found']]));
             }            
         }        
-        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));        
+        return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));        
     }
     
     public function newRubricAction()
@@ -767,23 +767,23 @@ class CollectionController extends AbstractActionController
     {
         $response = $this->getResponse();
         if(!$this->ajaxCheckAccess()) {
-            return $response->setContent(Json::encode(array('error' => 'Error. Access is denied!')));
+            return $response->setContent(Json::encode(['error' => ['descr' => 'Error. Access is denied!']]));
         }                
         $request = $this->getRequest();
         if ($request->isXmlHttpRequest()) {            
             $id = (int) $request->getPost('id');            
             if (!$id) {
-                return $response->setContent(Json::encode(array('error' => 'Id not found in request')));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Id not found in request']]));
             }
             $rubric = $this->collection->getRubricById($id);
             if ($rubric) {                   
                 $this->collection->deleteRubric($rubric);                                        
                 return $response->setContent(Json::encode(array('success' => 'Rubric has been deleted')));
             } else {
-                return $response->setContent(Json::encode(array('error' => 'Rubric not found')));
+                return $response->setContent(Json::encode(['error' => ['descr' => 'Rubric not found']]));
             }            
         }        
-        return $response->setContent(Json::encode(array('error' => 'Request mast be a post')));
+        return $response->setContent(Json::encode(['error' => ['descr' => 'Request mast be a post']]));
     }
 
     private function checkAccess()
@@ -880,7 +880,7 @@ class CollectionController extends AbstractActionController
         foreach ($form as $element) {
             $elemType = $element->getAttribute('type');
             $fieldName = $element->getName();
-            if (($elemType === 'select' && $element->isMultiple()) || $elemType === 'radio' || $elemType === 'multi_checkbox') {
+            if (($elemType === 'select' && $element->isMultiple()) || $elemType === 'multi_checkbox') {
                 $name = $element->getName().'[]';
                 $values = $form->get($fieldName)->getValue();
                 $value = [];

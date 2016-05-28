@@ -74,74 +74,30 @@ function handleForm(event) {
         });       
     });
 
-    var formButton = $('input[type="submit"]', $(ajaxform))[0];
-    formButton.disabled = true;    
-    cancel.disabled = true;
-    
+    var formButton = $('input[type="submit"]', $(ajaxform))[0];    
+    //очищаем форму
+    $(ajaxform).find('input[type="text"][type="file"]').each(function() {
+        $(this).val(null);
+    });
+    $(ajaxform).find('input[type="checkbox"][type="radio"]').each(function() {
+        $(this).prop('checked', false);
+    });
+    $(ajaxform).find('select').each(function() {
+        $(this).children().remove();
+    });
+
     //Показываем ajax окно с формой
     $('#cover').removeClass('hidden').addClass('cover');
     $(ajaxpage).removeClass('hidden').addClass('ajaxpage');
 
     var parentTr = $(target).parents("tr")[0];
-    var id = $(target)[0].dataset.id || 0;        
-    if (isFinite(id)) {
-        $.ajax({
-            type: "POST",            
-            url: url, 
-            data: {id: id},
-            success: function(result){
-                try {
-                    var data = JSON.parse(result);                    
-                } catch (er) {                        
-                    flashMessage(mess, 'Error JSON', '');                        
-                    $(cancel).click(); 
-                    return;
-                }
-                if (data.error && !data.formData) {
-                    flashMessage(mess, data.error, '');                        
-                    $(cancel).click();
-                    return;
-                }                                               
-                var formData = data.formData;                    
-                //заполняем форму полученными данными
-                for (var property in formData) {                    
-                    var elem = ajaxform[property];
-                    var values = formData[property];
-                    if (!values) {
-                        break; 
-                    }                                                                                                               
-                    if (-1 !== property.indexOf('[]')) {
-                        $(elem).children().remove();
-                        if (values.length > 0) {
-                            values.forEach(function(item, i, arr) {
-                                var option = document.createElement('option');
-                                var $_option = $(option); 
-                                $_option.val(item['value']);
-                                $_option.text(item['label']);
-                                $_option.prop('selected', item['selected']);
-                                $(elem).append($_option);
-                            });
-                        }                        
-                    } else {                        
-                        elem.value = formData[property];
-                        fields.push(property);
-                    }                        
-                }
-                //Цепляем слушателя на отправку формы
-                $(ajaxform).submit(processingForm);
-                cancel.disabled = false;
-                formButton.disabled = false;
-            },
-            error: function(result) {
-                $(cancel).click();
-                flashMessage(mess, 'AJAX error', '');
-                console.log(result.responseText);
-            }
-        });
-    } else {
-        $(cancel).click();
-        flashMessage(mess, 'Error. Id not found.', '');
-    }
+    var id = $(target)[0].dataset.id || 0;
+    var firstPass = true;
+
+    //Цепляем слушателя на отправку формы
+    $(ajaxform).submit(processingForm);
+    //Загружаем данные для редактирования
+    $(ajaxform).submit();
 
     function processingForm(event) {
         event.stopPropagation();
@@ -151,12 +107,18 @@ function handleForm(event) {
         $('[name="errprompt"]', $(ajaxform)).each(function() {
             this.remove();
         });        
-        var formData = new FormData(ajaxform);                
+        if (firstPass) {
+            var formData = {id: id};
+            var contentType = 'application/x-www-form-urlencoded; charset=UTF-8';
+        } else {
+            var formData = new FormData(ajaxform);
+            var contentType = false;
+        }        
         //Отправляем форму
         $.ajax({
             type: "POST",
-            processData: false,
-            contentType: false,
+            processData: firstPass,
+            contentType: contentType,
             url: url, 
             data: formData,
             success: function(result){
@@ -205,21 +167,21 @@ function handleForm(event) {
                         $(cancel).click();
                         return;
                     }
-                }
-                if ('error' in data && !formData in data) {
+                }                                
+                if ('error' in data && 'formData' in data === false) {                    
+                    if (parentTr !== undefined &&  -1 !== data.error.descr.indexOf('not found')) {
+                        $(parentTr).remove();
+                    }
                     flashMessage(mess, data.error.descr, '');
                     cancel.disabled = false;
                     $(cancel).click();
                     return;
-                }                
+                }
                 var formData = data.formData;                    
                 //заполняем форму полученными данными
                 for (var property in formData) {                    
                     var elem = ajaxform[property];
-                    var values = formData[property];
-                    if (!values) {
-                        break; 
-                    }                                                                                           
+                    var values = formData[property];                                                                                                              
                     if (-1 !== property.indexOf('[]')) {
                         $(elem).children().remove();
                         if (values.length > 0) {
@@ -232,26 +194,29 @@ function handleForm(event) {
                                 $(elem).append($_option);
                             });
                         }                        
-                    } else {                        
+                    } else if (values) {                        
                         elem.value = values;
-                        fields.push(property);
+                        fields.push(property);                        
                     }                        
-                }                                
-                flashMessage($('[name="message"]', $(ajaxform)), data.error.descr, '');
-                //Подробная информация об ошибках формы
-                var errorDatails = data.error.details;                
-                for (var property in errorDatails) {                    
-                    errorDatails[property].forEach(function(item, i, arr) {                        
-                        var selector = "[name='" + property + "']";                        
-                        addError($(selector.toString(), $(ajaxform)), item);
-                    });                    
                 }
+                //Подробная информация об ошибках формы
+                if (!firstPass) {
+                    flashMessage($('[name="message"]', $(ajaxform)), data.error.descr, '');
+                    var errorDatails = data.error.details;                
+                    for (var property in errorDatails) {                    
+                        errorDatails[property].forEach(function(item, i, arr) {                        
+                            var selector = "[name='" + property + "']";                        
+                            addError($(selector.toString(), $(ajaxform)), item);
+                        });                    
+                    }
+                }                
+                firstPass = false;
                 cancel.disabled = false;
                 formButton.disabled = false;
             },
             error: function(result){
                 console.log(result.responseText);
-                flashMessage(mess, 'AJAX error', '');
+                flashMessage(mess, 'Server error', '');
                 cancel.disabled = false;
                 $(cancel).click();
             }
@@ -323,10 +288,10 @@ function deleteAction(e) {
                     return;                                                                
                 } 
                 if ('error' in data) {
-                    if (parentTr !== undefined &&  -1 !== data['error'].indexOf('not found')) {
+                    if (parentTr !== undefined &&  -1 !== data['error']['descr'].indexOf('not found')) {
                         $(parentTr).remove();
                     }
-                    flashMessage(mess, data['error'], '');
+                    flashMessage(mess, data['error']['descr'], '');
                     cancel.disabled = false;
                     $(cancel).click();
                     return;
@@ -349,7 +314,7 @@ function deleteAction(e) {
             },
             error: function(result) {
                 console.log(result.responseText);                            
-                flashMessage(mess, 'AJAX error', '');
+                flashMessage(mess, 'Server error', '');
                 cancel.disabled = false;
                 $(cancel).click();
             }                    
