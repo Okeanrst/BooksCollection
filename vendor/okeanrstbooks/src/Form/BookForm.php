@@ -5,8 +5,10 @@ namespace OkeanrstBooks\Form;
 use Zend\Form\Form;
 use Zend\InputFilter\InputFilterInterface;
 use Zend\InputFilter\InputFilter;
+use Zend\Validator\Callback as CallbackValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use DoctrineModule\Stdlib\Hydrator\DoctrineObject as DoctrineHydrator;
+use DoctrineModule\Validator\ObjectExists as ObjectExistsValidator;
 use Zend\Stdlib\Hydrator\ClassMethods;
 use OkeanrstBooks\Entity\Book;
 
@@ -160,7 +162,7 @@ class BookForm extends Form
                 'filters'  => array(
                     array('name' => 'Int'),
                 ),
-                'validators' => array(
+                /*'validators' => array(
                     array(
                         'name' => 'DoctrineModule\Validator\ObjectExists',
                         'options' => array(
@@ -168,7 +170,7 @@ class BookForm extends Form
                             'fields' => 'id'
                         )
                     )
-                )                
+                )*/                
             ));
 
             $inputFilter->add(array(
@@ -176,16 +178,7 @@ class BookForm extends Form
                 'required' => true,
                 'filters'  => array(
                     array('name' => 'Int'),
-                ),
-                'validators' => array(
-                    array(
-                        'name' => 'DoctrineModule\Validator\ObjectExists',
-                        'options' => array(
-                            'object_repository' => $this->objectManager->getRepository('OkeanrstBooks\Entity\Rubric'),
-                            'fields' => 'id'
-                        )
-                    )
-                )                
+                )               
             ));
             
             $inputFilter->add(array(
@@ -266,7 +259,49 @@ class BookForm extends Form
             
 
             $this->inputFilter = $inputFilter;
-        }        
+        }
+
+        $rubricInputFilter = $this->inputFilter->get('rubric');
+        
+        $rubricCallbackValidator = new CallbackValidator(function($value){
+            $value = is_object($value) ? array($value) : (array) $value;
+
+            $objectExistsValidator = new ObjectExistsValidator(array(
+                'object_repository' => $this->objectManager->getRepository('OkeanrstBooks\Entity\Rubric'),
+                'fields'            => 'id'
+            ));            
+
+            foreach ($value as $key => $val) {
+                if (!$objectExistsValidator->isValid($val)) {
+                    return false;
+                }
+            }
+            return true;           
+        });
+        $rubricCallbackValidator->setMessage("No object matching '%value%' was found", 'callbackValue');
+        
+        $rubricInputFilter->getValidatorChain()->attach($rubricCallbackValidator);
+
+        $authorInputFilter = $this->inputFilter->get('author');
+        
+        $authorCallbackValidator = new CallbackValidator(function($value){
+            $value = is_object($value) ? array($value) : (array) $value;
+
+            $objectExistsValidator = new ObjectExistsValidator(array(
+                'object_repository' => $this->objectManager->getRepository('OkeanrstBooks\Entity\Author'),
+                'fields'            => 'id'
+            ));            
+
+            foreach ($value as $key => $val) {
+                if (!$objectExistsValidator->isValid($val)) {
+                    return false;
+                }
+            }
+            return true;           
+        });
+        $authorCallbackValidator->setMessage("No object matching '%value%' was found", 'callbackValue');
+        
+        $authorInputFilter->getValidatorChain()->attach($authorCallbackValidator);        
 
         return $this->inputFilter;
     }
