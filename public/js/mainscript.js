@@ -1,5 +1,14 @@
 "use strict";
 
+/*$(document).ready(function() {               
+    $( document ).ajaxStart(function() {
+        console.log('ajaxStart');        
+    });
+    $( document ).ajaxStop(function() {
+        console.log('ajaxStop');
+    });          
+});*/
+
 function flashMessage(mess, error, success) {
     if (error !== '') {
         console.log(error);
@@ -169,7 +178,7 @@ function handleForm(event) {
                     }
                 }                                
                 if ('error' in data && 'formData' in data === false) {                    
-                    if (parentTr !== undefined &&  -1 !== data.error.descr.indexOf('not found')) {
+                    if (typeof parentTr !== 'undefined' &&  -1 !== data.error.descr.indexOf('not found')) {
                         $(parentTr).remove();
                     }
                     flashMessage(mess, data.error.descr, '');
@@ -288,7 +297,7 @@ function deleteAction(e) {
                     return;                                                                
                 } 
                 if ('error' in data) {
-                    if (parentTr !== undefined &&  -1 !== data['error']['descr'].indexOf('not found')) {
+                    if (typeof parentTr !== 'undefined' &&  -1 !== data['error']['descr'].indexOf('not found')) {
                         $(parentTr).remove();
                     }
                     flashMessage(mess, data['error']['descr'], '');
@@ -298,11 +307,11 @@ function deleteAction(e) {
                 }
                 if ('success' in data) {
                     flashMessage(mess, '', data['success']);
-                    if (parentTr !== undefined) {
+                    if (typeof parentTr !== 'undefined') {
                         $(parentTr).remove();
                     }                    
                 }                               
-                if (parentTr === undefined && urlRedirect !== undefined) {
+                if (typeof parentTr === 'undefined' && typeof urlRedirect !== 'undefined') {
                     window.location = urlRedirect;
                 }
                 if (reload) {
